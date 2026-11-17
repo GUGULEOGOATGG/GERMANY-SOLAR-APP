@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Germany Solar</title>
+<link rel="icon" type="image/png" href="icone.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Plano: azul escuro no cabeçalho com sol laranja claro; laranja fosco só nas ações e no progresso.
+   Coluna única de até 920px; abas no topo (desktop) ou no rodapé (celular). */
+:root{
+  --bg:#f1f3f8; --surface:#ffffff; --ink:#14233b; --muted:#59677f; --line:#d4dae6;
+  --brand:#17305a; --primary:#1d3d70; --on-primary:#ffffff;
+  --accent:#b4601f; --on-accent:#ffffff; --sun:#f8ab4e;
+  --ok:#1f7a4d; --ok-bg:#e1f1e8; --warn:#8f5600; --warn-bg:#fbe9cc;
+  --bad:#b3261e; --bad-bg:#f9e0de; --info:#1d4f8f; --info-bg:#dfe8f6; --off:#667186; --off-bg:#e6e9f0;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1728; --surface:#15233b; --ink:#e6ebf4; --muted:#93a1b8; --line:#273752;
+    --brand:#0a1322; --primary:#3a67aa; --on-primary:#ffffff;
+    --accent:#d98845; --on-accent:#221200; --sun:#f8ab4e;
+    --ok:#6fd3a0; --ok-bg:#16382a; --warn:#f0c064; --warn-bg:#3d2f10;
+    --bad:#ff9d94; --bad-bg:#45201d; --info:#9cc2f2; --info-bg:#1a3357; --off:#a3adbf; --off-bg:#243350;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1728; --surface:#15233b; --ink:#e6ebf4; --muted:#93a1b8; --line:#273752;
+  --brand:#0a1322; --primary:#3a67aa; --on-primary:#ffffff;
+  --accent:#d98845; --on-accent:#221200; --sun:#f8ab4e;
+  --ok:#6fd3a0; --ok-bg:#16382a; --warn:#f0c064; --warn-bg:#3d2f10;
+  --bad:#ff9d94; --bad-bg:#45201d; --info:#9cc2f2; --info-bg:#1a3357; --off:#a3adbf; --off-bg:#243350;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.45 var(--body);padding-bottom:88px}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;text-wrap:balance;letter-spacing:.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+header{background:var(--brand);border-bottom:4px solid var(--accent)}
+.bar{max-width:920px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.brand{font:700 26px/1 var(--display);text-transform:uppercase;letter-spacing:.03em;color:#fff;display:flex;align-items:center;gap:12px}
+.sol{width:44px;height:44px;color:var(--sun);flex:none}
+.brand small{display:block;font:500 13px/1.3 var(--body);color:rgba(255,255,255,.72);text-transform:none;letter-spacing:0;margin-top:3px}
+nav{display:flex;gap:4px;margin-left:auto}
+nav a{font:600 18px/1 var(--display);text-transform:uppercase;letter-spacing:.04em;text-decoration:none;color:rgba(255,255,255,.72);padding:10px 14px;border-radius:6px;border-bottom:3px solid transparent}
+nav a[aria-current="page"]{color:#fff;border-bottom-color:var(--sun);border-radius:6px 6px 0 0}
+nav a:hover{color:#fff}
+
+main{max-width:920px;margin:0 auto;padding:20px 16px;display:grid;gap:20px}
+.notice{padding:10px 14px;border-radius:8px;background:var(--warn-bg);color:var(--warn);font-weight:500}
+.notice.bad{background:var(--bad-bg);color:var(--bad)}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.head h1{font-size:34px;line-height:1.05}
+.head p{margin:4px 0 0;color:var(--muted)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.btn{border:1px solid var(--line);background:var(--surface);padding:10px 16px;border-radius:8px;font-weight:600;cursor:pointer;min-height:44px}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
+.btn.go{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.btn.danger{color:var(--bad)}
+.btn.small{min-height:38px;padding:6px 12px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input[type=text],input[type=email],input[type=password],input[type=search],input[type=tel],input[type=date],input[type=number],select,textarea{
+  width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px}
+textarea{min-height:80px;resize:vertical}
+.search{max-width:280px}
+
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.tile b{display:block;font:700 44px/1 var(--display);font-variant-numeric:tabular-nums}
+.tile span{color:var(--muted);font-size:14px}
+
+section>h2{font-size:22px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.list{display:grid;gap:8px}
+.row{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:8px;grid-template-columns:1fr auto;align-items:start}
+.row.dim{opacity:.6}
+.row h3{font-size:22px;line-height:1.1}
+.meta{color:var(--muted);font-size:14px;display:flex;gap:4px 14px;flex-wrap:wrap;overflow-wrap:anywhere}
+.side{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;grid-column:1/-1}
+.pill,.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.ok{background:var(--ok-bg);color:var(--ok)} .warn{background:var(--warn-bg);color:var(--warn)}
+.bad{background:var(--bad-bg);color:var(--bad)} .info{background:var(--info-bg);color:var(--info)}
+.off{background:var(--off-bg);color:var(--off)}
+.chip{background:var(--off-bg);color:var(--ink);font-weight:500}
+.actions{display:flex;gap:8px;flex-wrap:wrap;grid-column:1/-1}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:28px 20px;text-align:center;color:var(--muted);display:grid;gap:12px;justify-items:center}
+
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:9px 13px;min-height:42px;font-weight:600;font-size:14px;cursor:pointer;border-left:1px solid var(--line)}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--primary);color:var(--on-primary)}
+.seg button.p[aria-pressed="true"]{background:var(--ok);color:var(--surface)}
+.seg button.f[aria-pressed="true"]{background:var(--bad);color:var(--surface)}
+.seg button.g[aria-pressed="true"]{background:var(--info);color:var(--surface)}
+.daynav{display:flex;gap:8px;align-items:center}
+.daynav input{width:auto}
+.pres{grid-template-columns:1fr auto;align-items:center}
+
+.etapas{grid-column:1/-1;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:8px}
+.etapas p{margin:0}
+.prog{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
+.barra{flex:1;max-width:220px;height:6px;background:var(--off-bg);border-radius:9px;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--accent)}
+.etapas ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.etapas li{display:grid;grid-template-columns:auto 52px 1fr auto;gap:10px;align-items:start;padding:8px 10px;background:var(--bg);border-radius:8px}
+.check{width:30px;height:30px;border-radius:50%;border:2px solid var(--muted);background:var(--surface);color:transparent;cursor:pointer;font-weight:700;padding:0;line-height:1}
+li.feito .check{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+.check:disabled{cursor:default}
+.quando{font:600 18px/30px var(--display);font-variant-numeric:tabular-nums}
+.oque{overflow-wrap:anywhere;padding-top:3px}
+.oque small{display:block;color:var(--muted)}
+.link{border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:4px 2px;text-decoration:underline;justify-self:start}
+.dur{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dur label{display:flex;gap:10px;align-items:center;border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:12px;cursor:pointer}
+.dur label:has(input:checked){border-color:var(--accent)}
+.dur input{accent-color:var(--accent);width:18px;height:18px;flex:none}
+.dur small{display:block}
+form[data-dur="curto"] .so-longo,form[data-dur="longo"] .so-curto{display:none}
+.grupo{display:grid;gap:10px}
+.grupo>h2{font-size:22px;text-transform:uppercase;letter-spacing:.04em}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);padding:0;width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgba(10,16,20,.55)}
+dialog form{padding:20px;display:grid;gap:14px}
+dialog h2{font-size:28px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:grid;gap:5px;font-size:14px;font-weight:600}
+label small{font-weight:400;color:var(--muted)}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.checks label{display:flex;align-items:center;gap:8px;font-weight:500;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px;cursor:pointer}
+.checks input{width:18px;height:18px;accent-color:var(--accent)}
+.foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.foot .danger{margin-right:auto}
+.err{color:var(--bad);font-weight:600;margin:0}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;max-width:calc(100vw - 32px);z-index:5}
+#toast:empty{display:none}
+
+@media (max-width:640px){
+  .bar{padding:12px 16px}
+  nav{position:fixed;left:0;right:0;bottom:0;margin:0;background:var(--brand);border-top:3px solid var(--accent);justify-content:space-around;padding:6px 8px;z-index:4}
+  nav a{font-size:17px;padding:12px 8px;flex:1;text-align:center;border-bottom:0;border-top:3px solid transparent}
+  nav a[aria-current="page"]{border-top-color:var(--sun);border-radius:0}
+  .head h1{font-size:28px}
+  .tile b{font-size:36px}.tile{padding:12px}
+  .grid2,.checks,.dur{grid-template-columns:1fr}
+  .etapas li{grid-template-columns:auto 46px 1fr}
+  .etapas li .link{grid-column:3}
+  .search{max-width:none}
+  .pres{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">
+      <svg class="sol" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="10" fill="currentColor"/><g stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M24 3v5M24 40v5M3 24h5M40 24h5M12.7 12.7 9.2 9.2M35.3 12.7l3.5-3.5M12.7 35.3l-3.5 3.5M35.3 35.3l3.5 3.5"/></g></svg>
+      <div>Germany Solar<small>Funcionários, serviços e presença</small></div>
+    </div>
+    <nav aria-label="Seções">
+      <a href="#inicio">Início</a>
+      <a href="#equipe">Equipe</a>
+      <a href="#servicos">Serviços</a>
+      <a href="#presenca">Presença</a>
+    </nav>
+  </div>
+</header>
+<main id="app"></main>
+<dialog id="dlg"></dialog>
+<div id="toast" role="status"></div>
+
+<script>
+const FUNCOES = ["Eletricista","Instalador solar","Ajudante","Técnico em eletrotécnica","Engenheiro eletricista","Projetista","Administrativo"];
+const ST_FUNC = {ativo:["Ativo","ok"],ferias:["Férias","info"],afastado:["Afastado","warn"],desligado:["Desligado","off"]};
+const TIPOS = ["Instalação solar","Manutenção solar","Limpeza de módulos","Elétrica residencial","Elétrica predial","Elétrica industrial","Vistoria técnica"];
+const ST_SERV = {agendado:["Agendado","info"],andamento:["Em andamento","warn"],concluido:["Concluído","ok"]};
+const PRES = {presente:"Presente",falta:"Falta",folga:"Folga"};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const iso = d => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+const hoje = () => iso(new Date());
+const br = s => s ? s.split("-").reverse().join("/") : "";
+const dias = s => Math.round((new Date(s+"T00:00") - new Date(hoje()+"T00:00")) / 864e5);
+const somaDia = (s,n) => { const d = new Date(s+"T12:00"); d.setDate(d.getDate()+n); return iso(d); };
+
+const S = {
+  db:null, conn:"conectando", podeEscrever:true,
+  func:[], serv:[], okFunc:false, okServ:false,
+  busca:"", filtroServ:"abertos",
+  abertos:new Set(),
+  modo:"local", cfg:null, user:null, login:false, unsubs:[],
+  presData:hoje(), marcas:{}, presSujo:false, presGravando:false, presUnsub:null
+};
+
+/* ---------- banco de dados local ---------- */
+const NO_APP = location.protocol.startsWith("http") && location.hostname === "127.0.0.1";
+const ANDROID = !!(window.AndroidApp && window.AndroidApp.lerDados);
+const COLS = ["funcionarios","servicos","presenca"];
+const CFG_K = "equipe-nuvem-config";
+
+/* Banco local: arquivo ao lado do programa (app de PC) ou armazenamento do navegador. */
+async function bancoLocal(){
+  const K = "equipe-eletrica-solar-v1";
+  let dados;
+  if(ANDROID){
+    dados = JSON.parse(window.AndroidApp.lerDados() || "{}") || {};
+  } else if(NO_APP){
+    const r = await fetch("/api/dados", {cache:"no-store"});
+    if(!r.ok) throw 0;
+    dados = await r.json() || {};
+  } else dados = JSON.parse(localStorage.getItem(K) || "{}") || {};
+  const subs = [], meta = {fromCache:false, hasPendingWrites:false};
+  let fila = Promise.resolve();
+  const grava = () => {
+    subs.slice().forEach(f => f());
+    const corpo = JSON.stringify(dados);
+    if(ANDROID) return window.AndroidApp.gravarDados(corpo) ? Promise.resolve() : Promise.reject({code:"disco"});
+    if(!NO_APP){
+      try { localStorage.setItem(K, corpo); return Promise.resolve(); } catch(e){ return Promise.reject({code:"quota_exceeded"}); }
+    }
+    fila = fila.catch(() => {}).then(() => fetch("/api/dados", {method:"PUT", headers:{"Content-Type":"application/json","X-App":"1"}, body:corpo}))
+      .then(r => { if(!r.ok) throw {code:"unavailable"}; });
+    return fila;
+  };
+  const snap = (c,id) => ({id, exists:!!(dados[c] && dados[c][id]), data:() => dados[c] && dados[c][id], metadata:meta});
+  const ouvir = f => { subs.push(f); setTimeout(f, 0); return () => { const i = subs.indexOf(f); if(i >= 0) subs.splice(i,1); }; };
+  const docRef = (c,id) => ({id, path:c + "/" + id,
+    async set(d){ (dados[c] = dados[c] || {})[id] = d; await grava(); },
+    async update(d){ if(!dados[c] || !dados[c][id]) throw {code:"invalid_argument"}; dados[c][id] = {...dados[c][id], ...d}; await grava(); },
+    async delete(){ if(dados[c]) delete dados[c][id]; await grava(); },
+    onSnapshot(next){ return ouvir(() => next(snap(c,id))); }});
+  return {
+    doc:p => { const [c,id] = p.split("/"); return docRef(c,id); },
+    collection:c => ({doc:id => docRef(c, id || novoId()),
+      onSnapshot(next){ return ouvir(() => next({docs:Object.keys(dados[c] || {}).map(id => snap(c,id)), metadata:meta})); }}),
+    vazio:() => !COLS.some(c => Object.keys(dados[c] || {}).length),
+    exportar:() => JSON.stringify(dados, null, 1),
+    importar:o => { dados = o; return grava(); }
+  };
+}
+
+/* Banco na nuvem: Firestore do projeto Firebase do próprio usuário. */
+function lerCfg(){ try { return JSON.parse(localStorage.getItem(CFG_K)); } catch(e){ return null; } }
+function carregarScript(src){
+  return new Promise((ok, er) => { const el = document.createElement("script"); el.src = src; el.onload = ok; el.onerror = er; document.head.appendChild(el); });
+}
+async function carregarFirebase(cfg){
+  const v = "https://www.gstatic.com/firebasejs/10.12.2/firebase-";
+  await carregarScript(v + "app-compat.js");
+  await carregarScript(v + "auth-compat.js");
+  await carregarScript(v + "firestore-compat.js");
+  firebase.initializeApp(cfg);
+  try { await firebase.firestore().enablePersistence({synchronizeTabs:true}); } catch(e){}
+}
+function bancoNuvem(){
+  const fs = firebase.firestore();
+  const limpo = d => JSON.parse(JSON.stringify(d));
+  // Sem internet a gravação fica na fila do aparelho: libera a tela depois de 4 s.
+  const prazo = p => {
+    let venceu = false;
+    p.catch(e => { if(venceu) aviso(msgErro(e)); });
+    return Promise.race([p, new Promise(r => setTimeout(() => { venceu = true; r(); }, 4000))]);
+  };
+  const docRef = r => ({id:r.id, path:r.path,
+    set:d => prazo(r.set(limpo(d))), update:d => prazo(r.update(limpo(d))), delete:() => prazo(r.delete()),
+    onSnapshot:(n,e) => r.onSnapshot(n,e)});
+  return {
+    doc:p => docRef(fs.doc(p)),
+    collection:c => ({doc:id => docRef(id ? fs.collection(c).doc(id) : fs.collection(c).doc()),
+      onSnapshot:(n,e) => fs.collection(c).onSnapshot(n,e)}),
+    async exportar(){
+      const o = {};
+      for(const c of COLS){ const q = await fs.collection(c).get(); o[c] = {}; q.docs.forEach(d => { o[c][d.id] = d.data(); }); }
+      return JSON.stringify(o, null, 1);
+    },
+    async importar(o){
+      const ops = [];
+      for(const c of COLS) for(const [id,d] of Object.entries(o[c] || {})) ops.push([fs.collection(c).doc(id), limpo(d)]);
+      for(let i = 0; i < ops.length; i += 400){
+        const b = fs.batch(); ops.slice(i, i + 400).forEach(([r,d]) => b.set(r,d)); await b.commit();
+      }
+    }
+  };
+}
+function blocoBackup(){
+  if(!S.db) return "";
+  const botoes = `<button class="btn small primary" data-backup>Baixar backup</button>
+    <button class="btn small" data-restaurar>Restaurar backup</button>
+    <input type="file" id="arq-backup" accept=".json,application/json" hidden>`;
+  if(S.modo === "nuvem") return `<section><h2>Nuvem</h2><div class="row" style="grid-template-columns:1fr">
+    <div class="meta" style="font-size:15px">Conectado como ${esc(S.user)}. Os dados ficam no seu Firebase e atualizam sozinhos em todos os aparelhos conectados.</div>
+    <div class="actions">${botoes}
+      <button class="btn small" data-subir>Enviar dados deste aparelho para a nuvem</button>
+      <button class="btn small" data-sair>Sair da conta</button>
+      <button class="btn small danger" data-desconectar>Desconectar da nuvem</button></div></div></section>`;
+  return `<section><h2>Cópia de segurança</h2><div class="row" style="grid-template-columns:1fr">
+    <div class="meta" style="font-size:15px">${ANDROID ? "Os dados ficam guardados no próprio celular, dentro do app. Baixe um backup de vez em quando: desinstalar o app apaga os dados."
+      : NO_APP ? "Os dados ficam no arquivo dados-equipe.json, na mesma pasta do programa. Para guardar uma cópia, baixe um backup aqui ou copie esse arquivo."
+      : "Os dados ficam salvos só neste navegador, neste aparelho. Baixe um backup com frequência: limpar os dados do navegador apaga tudo."}</div>
+    <div class="actions">${botoes}</div></div></section>
+  <section><h2>Sincronizar na nuvem</h2><div class="row" style="grid-template-columns:1fr">
+    <div class="meta" style="font-size:15px">Conecte o app ao seu projeto gratuito do Firebase para usar os mesmos dados no PC e no celular.</div>
+    <div class="actions"><button class="btn small go" data-conectar>Conectar à nuvem</button></div></div></section>`;
+}
+function telaLogin(){
+  return `<div class="head"><div><h1>Entrar</h1><p>Use o e-mail e a senha que você cadastrou no Firebase.</p></div></div>
+  <form id="form-login" class="row" style="grid-template-columns:1fr;max-width:440px">
+    <label>E-mail<input type="email" id="l-email" required autocomplete="username"></label>
+    <label>Senha<input type="password" id="l-senha" required autocomplete="current-password"></label>
+    <p class="err" id="erro" hidden></p>
+    <div class="actions"><button class="btn primary" id="salvar">Entrar</button>
+    <button type="button" class="btn danger" data-desconectar>Desconectar da nuvem</button></div></form>`;
+}
+function telaSemNet(){
+  return `<div class="empty"><strong>Sem conexão com a nuvem.</strong>O app está ligado ao Firebase e precisa de internet para abrir.
+    <div class="actions" style="justify-content:center"><button class="btn primary" data-recarregar>Tentar de novo</button>
+    <button class="btn danger" data-desconectar>Desconectar da nuvem</button></div></div>`;
+}
+let backupPendente = null;
+
+async function iniciar(){
+  window.addEventListener("hashchange", render);
+  render();
+  S.cfg = lerCfg();
+  if(S.cfg && S.cfg.apiKey){
+    S.modo = "nuvem";
+    try { await carregarFirebase(S.cfg); } catch(e){ S.conn = "semnet"; render(); return; }
+    firebase.auth().onAuthStateChanged(u => {
+      pararOuvintes();
+      if(!u){ S.user = null; S.login = true; render(); return; }
+      S.user = u.email; S.login = false; S.db = bancoNuvem(); ouvir();
+    });
+    return;
+  }
+  let db = null;
+  try { db = await bancoLocal(); } catch(e){ db = null; }
+  if(!db){ S.conn = "sem"; render(); return; }
+  S.db = db; ouvir();
+}
+function pararOuvintes(){
+  S.unsubs.forEach(f => f()); S.unsubs = [];
+  if(S.presUnsub){ S.presUnsub(); S.presUnsub = null; }
+  S.db = null; S.func = []; S.serv = []; S.okFunc = S.okServ = false; S.marcas = {}; S.conn = "conectando";
+}
+function ouvir(){
+  const db = S.db;
+  const lento = setTimeout(() => { if(S.conn === "conectando"){ S.conn = "lento"; render(); } }, 10000);
+  const pronto = snap => { if(!snap.metadata.fromCache){ clearTimeout(lento); S.conn = "ok"; } };
+  const falha = e => { clearTimeout(lento); S.conn = e && e.code === "permission-denied" ? "perm" : "erro"; render(); };
+  S.unsubs.push(db.collection("funcionarios").onSnapshot(snap => {
+    S.func = snap.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b) => String(a.nome).localeCompare(String(b.nome),"pt-BR"));
+    S.okFunc = true; pronto(snap); render();
+  }, falha));
+  S.unsubs.push(db.collection("servicos").onSnapshot(snap => {
+    S.serv = snap.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b) => String(a.data).localeCompare(String(b.data)));
+    S.okServ = true; pronto(snap); render();
+  }, falha));
+  ouvirPresenca();
+  render();
+}
+function ouvirPresenca(){
+  if(!S.db) return;
+  if(S.presUnsub) S.presUnsub();
+  S.marcas = {}; S.presSujo = false;
+  const data = S.presData;
+  S.presUnsub = S.db.doc("presenca/" + data).onSnapshot(snap => {
+    if(data !== S.presData || S.presSujo || S.presGravando) return;
+    const d = snap.exists ? snap.data() : null;
+    S.marcas = {...((d && d.marcas) || {})};
+    if(rota() === "presenca") render();
+  }, () => {});
+}
+async function gravarPresenca(){
+  if(S.presGravando) return;
+  S.presGravando = true;
+  try {
+    while(S.presSujo){
+      S.presSujo = false;
+      await S.db.doc("presenca/" + S.presData).set({marcas:{...S.marcas}});
+    }
+  } catch(e){ aviso(msgErro(e)); }
+  S.presGravando = false;
+}
+function msgErro(e){
+  const c = e && e.code;
+  if(c === "permission-denied") return "A nuvem recusou a gravação. Confira as regras do Firestore no passo a passo.";
+  if(c === "disco") return "Não foi possível gravar no celular. Verifique se há espaço livre.";
+  if(c === "invalid_argument") return "Não foi possível salvar. Sua conta pode estar só com permissão de leitura.";
+  if(c === "quota_exceeded") return "O armazenamento do navegador está cheio. Baixe um backup e apague registros antigos.";
+  if(c === "resource_exhausted") return "Muitas alterações seguidas. Aguarde alguns segundos e tente de novo.";
+  if(c === "revoked") return "Seu acesso mudou. Recarregue a página.";
+  return "Não foi possível salvar. Feche e abra o app de novo.";
+}
+let tAviso;
+function aviso(t){ $("#toast").textContent = t; clearTimeout(tAviso); tAviso = setTimeout(() => $("#toast").textContent = "", 4000); }
+
+/* ---------- telas ---------- */
+const rota = () => ["inicio","equipe","servicos","presenca"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "inicio";
+const nomeDe = id => { const f = S.func.find(x => x.id === id); return f ? f.nome : "Removido"; };
+const pill = (map,k) => { const v = map[k] || ["—","off"]; return `<span class="pill ${v[1]}">${esc(v[0])}</span>`; };
+const edita = () => S.db && S.podeEscrever;
+
+function bannerConn(){
+  if(S.conn === "sem") return `<div class="notice bad">${NO_APP ? "O app não está respondendo. Feche esta janela e abra o app de novo." : "Este navegador bloqueou o armazenamento local, então nada será salvo. Abra fora do modo anônimo."}</div>`;
+  if(S.conn === "perm") return `<div class="notice bad">A nuvem recusou o acesso aos dados. Confira se as regras do Firestore foram publicadas como no passo a passo.</div>`;
+  if(S.conn === "lento") return `<div class="notice">O banco de dados ainda não respondeu. Os dados podem estar desatualizados; a página continua tentando.</div>`;
+  if(S.conn === "erro") return `<div class="notice bad">A conexão com o banco de dados caiu. Recarregue a página.</div>`;
+  if(S.db && !S.podeEscrever) return `<div class="notice">Você está em modo leitura. Peça ao dono do app permissão de colaborador para editar.</div>`;
+  return "";
+}
+function carregando(ok){ return !ok && S.conn !== "sem" ? `<div class="empty">Carregando dados…</div>` : ""; }
+
+function alertasNR(){
+  const out = [];
+  for(const f of S.func){
+    if(f.status === "desligado") continue;
+    for(const [campo,rot] of [["nr10","NR-10"],["nr35","NR-35"]]){
+      if(!f[campo]) continue;
+      const d = dias(f[campo]);
+      if(d < 0) out.push({f,rot,d,cls:"bad",txt:`${rot} vencida em ${br(f[campo])}`});
+      else if(d <= 30) out.push({f,rot,d,cls:"warn",txt:`${rot} vence em ${d} dia${d===1?"":"s"} (${br(f[campo])})`});
+    }
+  }
+  return out.sort((a,b) => a.d - b.d);
+}
+function nrBadges(f){
+  return [["nr10","NR-10"],["nr35","NR-35"]].map(([c,rot]) => {
+    if(!f[c]) return "";
+    const d = dias(f[c]);
+    const cls = d < 0 ? "bad" : d <= 30 ? "warn" : "ok";
+    return `<span class="pill ${cls}">${rot} ${d < 0 ? "vencida" : "até " + br(f[c])}</span>`;
+  }).join("");
+}
+
+const longo = s => s.duracao === "longo";
+const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const etapasDe = s => (s.etapas || []).slice().sort((a,b) => String(a.data).localeCompare(String(b.data)));
+
+function blocoEtapas(s){
+  const et = etapasDe(s), h = hoje();
+  if(!et.length) return `<div class="etapas"><p class="meta">Nenhuma etapa registrada ainda. Registre aqui o que foi feito em cada dia.</p></div>`;
+  const feitas = et.filter(e => e.feito).length;
+  const aberto = S.abertos.has(s.id);
+  const vis = aberto || et.length <= 3 ? et : et.slice(-3);
+  return `<div class="etapas">
+    <div class="prog"><span>${feitas} de ${et.length} etapas concluídas</span><span class="barra"><i style="width:${Math.round(feitas / et.length * 100)}%"></i></span></div>
+    ${et.length > 3 ? `<button type="button" class="link" data-abrir="${esc(s.id)}">${aberto ? "Mostrar só as 3 últimas" : `Ver todas as ${et.length} etapas`}</button>` : ""}
+    <ol>${vis.map(e => `<li class="${e.feito ? "feito" : ""}">
+      <button type="button" class="check" data-feito="${esc(e.id)}" data-sid="${esc(s.id)}" aria-pressed="${!!e.feito}" aria-label="${e.feito ? "Desmarcar etapa concluída" : "Marcar etapa como concluída"}" ${edita() ? "" : "disabled"}>✓</button>
+      <span class="quando">${e.data === h ? "Hoje" : esc(br(e.data).slice(0,5))}</span>
+      <span class="oque">${esc(e.texto)}${(e.equipe || []).length ? `<small>${esc(e.equipe.map(nomeDe).join(", "))}</small>` : ""}</span>
+      ${edita() ? `<button type="button" class="link" data-etapa="${esc(e.id)}" data-sid="${esc(s.id)}">Editar</button>` : ""}
+    </li>`).join("")}</ol></div>`;
+}
+
+function cardServico(s){
+  const L = longo(s), id = esc(s.id);
+  const eq = (s.equipe || []).map(i => `<span class="chip">${esc(nomeDe(i))}</span>`).join("") || `<span class="chip">Sem equipe definida</span>`;
+  const quando = L ? `<span>Início ${esc(br(s.data))}</span>${s.dataFim ? `<span>Previsão de término ${esc(br(s.dataFim))}</span>` : ""}` : `<span>${esc(br(s.data))}</span>`;
+  let ac = "";
+  if(edita()){
+    if(s.status === "agendado") ac += `<button class="btn small go" data-avancar="${id}" data-para="andamento">Iniciar serviço</button>`;
+    if(L && s.status !== "concluido") ac += `<button class="btn small ${s.status === "andamento" ? "go" : ""}" data-nova-etapa="${id}">Registrar etapa de hoje</button>`;
+    if(s.status === "andamento") ac += `<button class="btn small ${L ? "" : "go"}" data-avancar="${id}" data-para="concluido">Concluir serviço</button>`;
+    ac += `<button class="btn small" data-serv="${id}">Editar</button>`;
+  }
+  return `<article class="row">
+    <div>
+      <h3>${esc(s.cliente)}</h3>
+      <div class="meta"><span>${esc(s.tipo)}${s.kwp ? " · " + esc(s.kwp) + " kWp" : ""}</span>${quando}${s.endereco ? `<span>${esc(s.endereco)}</span>` : ""}</div>
+      ${s.obs ? `<div class="meta">${esc(s.obs)}</div>` : ""}
+    </div>
+    <div class="side">${pill(ST_SERV, s.status)}</div>
+    <div class="chips">${eq}</div>
+    ${L ? blocoEtapas(s) : ""}
+    ${ac ? `<div class="actions">${ac}</div>` : ""}
+  </article>`;
+}
+
+function telaInicio(){
+  const h = hoje();
+  const ativos = S.func.filter(f => f.status === "ativo").length;
+  const deHoje = S.serv.filter(s => s.status !== "concluido" && (longo(s) ? s.data <= h : s.data === h));
+  const andamento = S.serv.filter(s => s.status === "andamento").length;
+  const atrasados = S.serv.filter(s => !longo(s) && s.data < h && s.status === "agendado");
+  const al = alertasNR();
+  const fora = S.func.filter(f => f.status === "ferias" || f.status === "afastado");
+  const dataTxt = new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+  let h2 = `<div class="head"><div><h1>Hoje</h1><p>${esc(dataTxt)}</p></div></div>
+  <div class="tiles">
+    <div class="tile"><b>${ativos}</b><span>funcionários ativos</span></div>
+    <div class="tile"><b>${deHoje.length}</b><span>serviços para hoje</span></div>
+    <div class="tile"><b>${andamento}</b><span>em andamento</span></div>
+  </div>`;
+  if(!S.okFunc || !S.okServ) return h2 + carregando(false);
+  if(!S.func.length && !S.serv.length){
+    return h2 + `<div class="empty"><strong>Comece cadastrando sua equipe.</strong>Depois crie os serviços e escolha quem vai em cada um.${edita() ? `<button class="btn primary" data-novo-func>Cadastrar funcionário</button>` : ""}</div>`;
+  }
+  h2 += `<section><h2>Serviços de hoje</h2><div class="list">${deHoje.length ? deHoje.map(cardServico).join("") : `<div class="empty">Nenhum serviço marcado para hoje.</div>`}</div></section>`;
+  if(atrasados.length) h2 += `<section><h2>Agendados com data vencida</h2><div class="list">${atrasados.map(cardServico).join("")}</div></section>`;
+  if(al.length || fora.length){
+    h2 += `<section><h2>Atenção</h2><div class="list">` +
+      al.map(a => `<div class="row"><div><h3>${esc(a.f.nome)}</h3><div class="meta">${esc(a.f.funcao)}</div></div><div class="side"><span class="pill ${a.cls}">${esc(a.txt)}</span></div></div>`).join("") +
+      fora.map(f => `<div class="row"><div><h3>${esc(f.nome)}</h3><div class="meta">${esc(f.funcao)}</div></div><div class="side">${pill(ST_FUNC, f.status)}</div></div>`).join("") +
+      `</div></section>`;
+  }
+  return h2;
+}
+
+function listaEquipe(){
+  if(!S.okFunc) return carregando(false);
+  const q = S.busca.trim().toLowerCase();
+  const l = S.func.filter(f => !q || (f.nome + " " + f.funcao).toLowerCase().includes(q))
+    .sort((a,b) => (a.status === "desligado") - (b.status === "desligado"));
+  if(!S.func.length) return `<div class="empty"><strong>Nenhum funcionário cadastrado.</strong>${edita() ? `<button class="btn primary" data-novo-func>Cadastrar funcionário</button>` : ""}</div>`;
+  if(!l.length) return `<div class="empty">Ninguém encontrado com "${esc(S.busca)}".</div>`;
+  return l.map(f => `<article class="row ${f.status === "desligado" ? "dim" : ""}">
+    <div>
+      <h3>${esc(f.nome)}</h3>
+      <div class="meta"><span>${esc(f.funcao)}</span>${f.telefone ? `<span>${esc(f.telefone)}</span>` : ""}${f.admissao ? `<span>Admissão ${esc(br(f.admissao))}</span>` : ""}</div>
+      ${f.obs ? `<div class="meta">${esc(f.obs)}</div>` : ""}
+    </div>
+    <div class="side">${pill(ST_FUNC, f.status)}${edita() ? `<button class="btn small" data-func="${esc(f.id)}">Editar</button>` : ""}</div>
+    <div class="chips">${nrBadges(f)}</div>
+  </article>`).join("");
+}
+function telaEquipe(){
+  const n = S.func.filter(f => f.status !== "desligado").length;
+  return `<div class="head"><div><h1>Equipe</h1><p>${n} pessoa${n===1?"":"s"} no quadro</p></div>
+    <div class="tools"><input class="search" id="busca" type="search" placeholder="Buscar por nome ou função" value="${esc(S.busca)}" aria-label="Buscar funcionário">
+    ${edita() ? `<button class="btn primary" data-novo-func>Novo funcionário</button>` : ""}</div></div>
+    <div class="list" id="lista">${listaEquipe()}</div>`;
+}
+
+function telaServicos(){
+  const f = S.filtroServ;
+  let l = S.serv.filter(s => f === "todos" ? true : f === "concluidos" ? s.status === "concluido" : s.status !== "concluido");
+  if(f === "concluidos") l = l.slice().reverse();
+  const seg = [["abertos","Abertos"],["concluidos","Concluídos"],["todos","Todos"]]
+    .map(([k,t]) => `<button type="button" data-filtro="${k}" aria-pressed="${f===k}">${t}</button>`).join("");
+  const longos = l.filter(longo), curtos = l.filter(s => !longo(s));
+  const grupo = (t, arr) => arr.length ? `<div class="grupo"><h2>${t}</h2><div class="list">${arr.map(cardServico).join("")}</div></div>` : "";
+  return `<div class="head"><div><h1>Serviços</h1><p>Obras de vários dias e atendimentos de 1 dia</p></div>
+    <div class="tools"><div class="seg">${seg}</div>${edita() ? `<button class="btn primary" data-novo-serv>Novo serviço</button>` : ""}</div></div>
+    ${!S.okServ ? carregando(false) : l.length ? grupo("Serviços longos", longos) + grupo("Serviços de 1 dia", curtos) :
+      `<div class="empty"><strong>Nenhum serviço nesta lista.</strong>${edita() ? `<button class="btn primary" data-novo-serv>Criar serviço</button>` : ""}</div>`}`;
+}
+
+function telaPresenca(){
+  const l = S.func.filter(f => f.status === "ativo" || S.marcas[f.id]);
+  const cont = k => l.filter(f => S.marcas[f.id] === k).length;
+  const linhas = l.map(f => `<div class="row pres">
+      <div><h3>${esc(f.nome)}</h3><div class="meta">${esc(f.funcao)}</div></div>
+      <div class="seg">${Object.entries(PRES).map(([k,t]) =>
+        `<button type="button" class="${k[0] === "p" ? "p" : k === "falta" ? "f" : "g"}" data-marca="${k}" data-id="${esc(f.id)}" aria-pressed="${S.marcas[f.id]===k}" ${edita() ? "" : "disabled"}>${t}</button>`).join("")}</div>
+    </div>`).join("");
+  return `<div class="head"><div><h1>Presença</h1><p>${S.presData === hoje() ? "Hoje, " : ""}${esc(br(S.presData))}</p></div>
+    <div class="tools daynav">
+      <button class="btn" data-dia="-1" aria-label="Dia anterior">‹</button>
+      <input type="date" id="pres-data" value="${esc(S.presData)}" aria-label="Data da presença">
+      <button class="btn" data-dia="1" aria-label="Próximo dia">›</button>
+    </div></div>
+    <div class="tiles">
+      <div class="tile"><b>${cont("presente")}</b><span>presentes</span></div>
+      <div class="tile"><b>${cont("falta")}</b><span>faltas</span></div>
+      <div class="tile"><b>${cont("folga")}</b><span>folgas</span></div>
+    </div>
+    <div class="list">${!S.okFunc ? carregando(false) : linhas || `<div class="empty">Cadastre funcionários ativos na aba Equipe para marcar a presença.</div>`}</div>`;
+}
+
+function render(){
+  const r = rota();
+  document.querySelectorAll("nav a").forEach(a => a.getAttribute("href") === "#" + r ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
+  const foco = document.activeElement && document.activeElement.id === "busca";
+  if(S.conn === "semnet"){ $("#app").innerHTML = telaSemNet(); return; }
+  if(S.login){ if(!$("#form-login")) $("#app").innerHTML = telaLogin(); return; }
+  $("#app").innerHTML = bannerConn() + ({inicio:() => telaInicio() + blocoBackup(),equipe:telaEquipe,servicos:telaServicos,presenca:telaPresenca}[r])();
+  if(foco && $("#busca")){ const b = $("#busca"); b.focus(); b.setSelectionRange(b.value.length, b.value.length); }
+}
+
+/* ---------- formulários ---------- */
+const opts = (arr, sel) => arr.map(v => `<option ${v===sel?"selected":""}>${esc(v)}</option>`).join("");
+const optsMap = (map, sel) => Object.entries(map).map(([k,v]) => `<option value="${k}" ${k===sel?"selected":""}>${esc(v[0])}</option>`).join("");
+
+function formFunc(id){
+  const f = S.func.find(x => x.id === id) || {status:"ativo", funcao:FUNCOES[0]};
+  abrir(`<form id="form-func" data-id="${esc(id || "")}">
+    <h2>${id ? "Editar funcionário" : "Novo funcionário"}</h2>
+    <label>Nome completo<input type="text" id="f-nome" required maxlength="120" value="${esc(f.nome)}"></label>
+    <div class="grid2">
+      <label>Função<select id="f-funcao">${opts(FUNCOES.includes(f.funcao) ? FUNCOES : [f.funcao, ...FUNCOES], f.funcao)}</select></label>
+      <label>Situação<select id="f-status">${optsMap(ST_FUNC, f.status)}</select></label>
+      <label>Telefone<input type="tel" id="f-telefone" maxlength="30" placeholder="(11) 90000-0000" value="${esc(f.telefone)}"></label>
+      <label>Data de admissão<input type="date" id="f-admissao" value="${esc(f.admissao)}"></label>
+      <label>Validade da NR-10 <small>segurança em eletricidade</small><input type="date" id="f-nr10" value="${esc(f.nr10)}"></label>
+      <label>Validade da NR-35 <small>trabalho em altura</small><input type="date" id="f-nr35" value="${esc(f.nr35)}"></label>
+    </div>
+    <label>Observações<textarea id="f-obs" maxlength="500">${esc(f.obs)}</textarea></label>
+    <p class="err" id="erro" hidden></p>
+    <div class="foot">
+      ${id ? `<button type="button" class="btn danger" data-excluir="funcionarios/${esc(id)}" data-nome="${esc(f.nome)}">Excluir</button>` : ""}
+      <button type="button" class="btn" data-fechar>Cancelar</button>
+      <button class="btn primary" id="salvar">Salvar</button>
+    </div></form>`);
+}
+function formServ(id){
+  const s = S.serv.find(x => x.id === id) || {status:"agendado", tipo:TIPOS[0], data:hoje(), equipe:[], duracao:"curto"};
+  const eq = s.equipe || [], L = longo(s);
+  const pessoas = S.func.filter(f => f.status === "ativo" || eq.includes(f.id));
+  abrir(`<form id="form-serv" data-id="${esc(id || "")}" data-dur="${L ? "longo" : "curto"}">
+    <h2>${id ? "Editar serviço" : "Novo serviço"}</h2>
+    <div class="dur" role="radiogroup" aria-label="Duração do serviço">
+      <label><input type="radio" name="dur" id="s-dur-curto" value="curto" ${L ? "" : "checked"}><span><b>Serviço de 1 dia</b><small>Começa e termina no mesmo dia</small></span></label>
+      <label><input type="radio" name="dur" id="s-dur-longo" value="longo" ${L ? "checked" : ""}><span><b>Serviço longo</b><small>Vários dias, com etapas diárias</small></span></label>
+    </div>
+    <label>Cliente<input type="text" id="s-cliente" required maxlength="120" value="${esc(s.cliente)}"></label>
+    <label>Endereço<input type="text" id="s-endereco" maxlength="200" value="${esc(s.endereco)}"></label>
+    <div class="grid2">
+      <label>Tipo de serviço<select id="s-tipo">${opts(TIPOS.includes(s.tipo) ? TIPOS : [s.tipo, ...TIPOS], s.tipo)}</select></label>
+      <label>Situação<select id="s-status">${optsMap(ST_SERV, s.status)}</select></label>
+      <label><span class="so-curto">Data</span><span class="so-longo">Data de início</span><input type="date" id="s-data" required value="${esc(s.data)}"></label>
+      <label class="so-longo">Previsão de término <small>opcional</small><input type="date" id="s-fim" value="${esc(s.dataFim)}"></label>
+      <label>Potência do sistema <small>kWp, se for solar</small><input type="number" id="s-kwp" min="0" step="0.01" value="${esc(s.kwp)}"></label>
+    </div>
+    <div><label><span class="so-curto">Equipe do serviço</span><span class="so-longo">Equipe principal</span></label>
+      <div class="checks" style="margin-top:6px">${pessoas.length ? pessoas.map(f =>
+        `<label><input type="checkbox" id="eq-${esc(f.id)}" value="${esc(f.id)}" ${eq.includes(f.id) ? "checked" : ""}>${esc(f.nome)}</label>`).join("")
+        : `<span class="meta">Cadastre funcionários ativos para montar a equipe.</span>`}</div></div>
+    <label>Observações<textarea id="s-obs" maxlength="500">${esc(s.obs)}</textarea></label>
+    <p class="meta so-longo" style="margin:0">Depois de salvar, use o botão Registrar etapa de hoje no cartão do serviço para anotar o que foi feito em cada dia.</p>
+    <p class="err" id="erro" hidden></p>
+    <div class="foot">
+      ${id ? `<button type="button" class="btn danger" data-excluir="servicos/${esc(id)}" data-nome="${esc(s.cliente)}">Excluir</button>` : ""}
+      <button type="button" class="btn" data-fechar>Cancelar</button>
+      <button class="btn primary" id="salvar">Salvar</button>
+    </div></form>`);
+}
+function formEtapa(sid, eid){
+  const s = S.serv.find(x => x.id === sid); if(!s) return;
+  const e = (s.etapas || []).find(x => x.id === eid) || {data:hoje(), equipe:s.equipe || [], feito:true, texto:""};
+  const eq = e.equipe || [];
+  const pessoas = S.func.filter(f => f.status === "ativo" || eq.includes(f.id));
+  abrir(`<form id="form-etapa" data-sid="${esc(sid)}" data-eid="${esc(eid || "")}">
+    <h2>${eid ? "Editar etapa" : "Registrar etapa"}</h2>
+    <p class="meta" style="margin:0">${esc(s.cliente)} · ${esc(s.tipo)}</p>
+    <label>Dia<input type="date" id="e-data" required value="${esc(e.data)}"></label>
+    <label>O que foi feito neste dia<textarea id="e-texto" required maxlength="400" placeholder="Ex.: fixação dos trilhos e passagem dos cabos CC">${esc(e.texto)}</textarea></label>
+    <div><label>Quem trabalhou</label>
+      <div class="checks" style="margin-top:6px">${pessoas.length ? pessoas.map(f =>
+        `<label><input type="checkbox" id="ee-${esc(f.id)}" value="${esc(f.id)}" ${eq.includes(f.id) ? "checked" : ""}>${esc(f.nome)}</label>`).join("")
+        : `<span class="meta">Nenhum funcionário ativo cadastrado.</span>`}</div></div>
+    <div class="checks" style="grid-template-columns:1fr"><label><input type="checkbox" id="e-feito" ${e.feito ? "checked" : ""}>Etapa concluída <small>desmarque se for só planejada ou ficou pendente</small></label></div>
+    <p class="err" id="erro" hidden></p>
+    <div class="foot">
+      ${eid ? `<button type="button" class="btn danger" data-excluir-etapa>Excluir etapa</button>` : ""}
+      <button type="button" class="btn" data-fechar>Cancelar</button>
+      <button class="btn primary" id="salvar">Salvar</button>
+    </div></form>`);
+}
+function gravarEtapas(sid, etapas, extra){
+  return S.db.doc("servicos/" + sid).update({etapas, ...(extra || {})});
+}
+function abrir(html){ const d = $("#dlg"); d.innerHTML = html; if(!d.open) d.showModal(); }
+function fechar(){ const d = $("#dlg"); if(d.open) d.close(); d.innerHTML = ""; }
+function erroForm(e){ const p = $("#erro"); if(p){ p.textContent = msgErro(e); p.hidden = false; } const b = $("#salvar"); if(b) b.disabled = false; }
+const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
+
+async function salvar(col, id, dados){
+  $("#salvar").disabled = true;
+  try {
+    const ref = id ? S.db.doc(col + "/" + id) : S.db.collection(col).doc();
+    await ref.set(dados);
+    fechar(); aviso("Salvo.");
+  } catch(e){ erroForm(e); }
+}
+
+document.addEventListener("submit", ev => {
+  ev.preventDefault();
+  const f = ev.target;
+  if(f.id === "form-func"){
+    const id = f.dataset.id, antigo = S.func.find(x => x.id === id);
+    salvar("funcionarios", id, {nome:val("f-nome"), funcao:val("f-funcao"), status:val("f-status"), telefone:val("f-telefone"),
+      admissao:val("f-admissao"), nr10:val("f-nr10"), nr35:val("f-nr35"), obs:val("f-obs"),
+      criadoEm:(antigo && antigo.criadoEm) || new Date().toISOString()});
+  } else if(f.id === "form-serv"){
+    const id = f.dataset.id, antigo = S.serv.find(x => x.id === id);
+    const equipe = [...f.querySelectorAll(".checks input:checked")].map(i => i.value);
+    const dur = f.dataset.dur === "longo" ? "longo" : "curto";
+    salvar("servicos", id, {cliente:val("s-cliente"), endereco:val("s-endereco"), tipo:val("s-tipo"), data:val("s-data"),
+      duracao:dur, dataFim:dur === "longo" ? val("s-fim") : "", etapas:(antigo && antigo.etapas) || [],
+      status:val("s-status"), kwp:val("s-kwp"), equipe, obs:val("s-obs"),
+      criadoEm:(antigo && antigo.criadoEm) || new Date().toISOString()});
+  } else if(f.id === "form-etapa"){
+    const sv = S.serv.find(x => x.id === f.dataset.sid); if(!sv) return fechar();
+    const eid = f.dataset.eid;
+    const nova = {id:eid || novoId(), data:val("e-data"), texto:val("e-texto"), feito:$("#e-feito").checked,
+      equipe:[...f.querySelectorAll('input[id^="ee-"]:checked')].map(i => i.value)};
+    const et = (sv.etapas || []).filter(x => x.id !== nova.id).concat(nova);
+    $("#salvar").disabled = true;
+    gravarEtapas(sv.id, et, sv.status === "agendado" ? {status:"andamento"} : null)
+      .then(() => { fechar(); aviso("Etapa salva."); }).catch(erroForm);
+  } else if(f.id === "form-login"){
+    $("#salvar").disabled = true;
+    firebase.auth().signInWithEmailAndPassword(val("l-email"), $("#l-senha").value).catch(e => {
+      const p = $("#erro"); if(!p) return;
+      p.textContent = /network/.test(e.code || "") ? "Sem internet. Confira a conexão e tente de novo." : "E-mail ou senha incorretos.";
+      p.hidden = false; $("#salvar").disabled = false;
+    });
+  } else if(f.id === "form-conectar"){
+    const cfg = {};
+    for(const m of val("n-cfg").matchAll(/["']?(\w+)["']?\s*:\s*["']([^"']+)["']/g)) cfg[m[1]] = m[2];
+    if(!cfg.apiKey || !cfg.projectId){
+      const p = $("#erro"); p.textContent = "Não encontrei apiKey e projectId nesse texto. Copie o bloco firebaseConfig inteiro."; p.hidden = false; return;
+    }
+    localStorage.setItem(CFG_K, JSON.stringify(cfg));
+    location.reload();
+  } else if(f.id === "form-subir"){
+    $("#salvar").disabled = true;
+    bancoLocal().then(l => S.db.importar(JSON.parse(l.exportar())))
+      .then(() => { fechar(); aviso("Dados enviados para a nuvem."); }).catch(erroForm);
+  } else if(f.id === "form-restaurar"){
+    $("#salvar").disabled = true;
+    S.db.importar(backupPendente).then(() => { backupPendente = null; fechar(); aviso("Backup restaurado."); }).catch(erroForm);
+  } else if(f.id === "form-excluir"){
+    $("#salvar").disabled = true;
+    S.db.doc(f.dataset.path).delete().then(() => { fechar(); aviso("Excluído."); }).catch(erroForm);
+  }
+});
+
+document.addEventListener("click", ev => {
+  const t = ev.target.closest("button"); if(!t) return;
+  const d = t.dataset;
+  if("novoFunc" in d) formFunc();
+  else if(d.func) formFunc(d.func);
+  else if("novoServ" in d) formServ();
+  else if(d.serv) formServ(d.serv);
+  else if("fechar" in d) fechar();
+  else if(d.excluir){
+    abrir(`<form id="form-excluir" data-path="${esc(d.excluir)}"><h2>Excluir ${esc(d.nome)}?</h2>
+      <p style="margin:0">Esta ação não pode ser desfeita. ${d.excluir.startsWith("funcionarios") ? "Para manter o histórico, prefira mudar a situação para Desligado." : ""}</p>
+      <p class="err" id="erro" hidden></p>
+      <div class="foot"><button type="button" class="btn" data-fechar>Cancelar</button><button class="btn primary" id="salvar">Excluir</button></div></form>`);
+  }
+  else if(d.avancar){
+    t.disabled = true;
+    S.db.doc("servicos/" + d.avancar).update({status:d.para}).catch(e => { aviso(msgErro(e)); t.disabled = false; });
+  }
+  else if(d.novaEtapa) formEtapa(d.novaEtapa);
+  else if(d.etapa) formEtapa(d.sid, d.etapa);
+  else if(d.abrir){ S.abertos.has(d.abrir) ? S.abertos.delete(d.abrir) : S.abertos.add(d.abrir); render(); }
+  else if(d.feito){
+    const sv = S.serv.find(x => x.id === d.sid); if(!sv) return;
+    t.disabled = true;
+    gravarEtapas(sv.id, (sv.etapas || []).map(e => e.id === d.feito ? {...e, feito:!e.feito} : e))
+      .catch(e => { aviso(msgErro(e)); t.disabled = false; });
+  }
+  else if("excluirEtapa" in d){
+    if(!d.conf){ d.conf = "1"; t.textContent = "Clique de novo para excluir"; return; }
+    const f = t.closest("form"), sv = S.serv.find(x => x.id === f.dataset.sid); if(!sv) return fechar();
+    t.disabled = true;
+    gravarEtapas(sv.id, (sv.etapas || []).filter(e => e.id !== f.dataset.eid))
+      .then(() => { fechar(); aviso("Etapa excluída."); }).catch(erroForm);
+  }
+  else if("backup" in d){
+    Promise.resolve(S.db.exportar()).then(txt => {
+      if(ANDROID){ window.AndroidApp.salvarArquivo("backup-germany-solar-" + hoje() + ".json", txt); return; }
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([txt], {type:"application/json"}));
+      a.download = "backup-germany-solar-" + hoje() + ".json";
+      document.body.appendChild(a); a.click(); a.remove();
+      aviso("Backup baixado.");
+    }).catch(e => aviso(msgErro(e)));
+  }
+  else if("conectar" in d){
+    abrir(`<form id="form-conectar"><h2>Conectar à nuvem</h2>
+      <p style="margin:0">Cole aqui o bloco <b>firebaseConfig</b> que o Firebase mostra ao registrar o app web. O app vai recarregar e pedir o login.</p>
+      <label>Configuração do Firebase<textarea id="n-cfg" required style="min-height:170px;font-family:monospace;font-size:13px" placeholder='apiKey: "AIza...",\nauthDomain: "...",\nprojectId: "..."'></textarea></label>
+      <p class="err" id="erro" hidden></p>
+      <div class="foot"><button type="button" class="btn" data-fechar>Cancelar</button><button class="btn primary" id="salvar">Conectar</button></div></form>`);
+  }
+  else if("subir" in d){
+    abrir(`<form id="form-subir"><h2>Enviar dados para a nuvem?</h2>
+      <p style="margin:0">Os funcionários, serviços e presenças salvos só neste aparelho serão copiados para a nuvem. Faça isso uma vez, no aparelho que tem os dados.</p>
+      <p class="err" id="erro" hidden></p>
+      <div class="foot"><button type="button" class="btn" data-fechar>Cancelar</button><button class="btn primary" id="salvar">Enviar</button></div></form>`);
+  }
+  else if("sair" in d) firebase.auth().signOut();
+  else if("recarregar" in d) location.reload();
+  else if("desconectar" in d){
+    if(!d.conf){ d.conf = "1"; t.textContent = "Clique de novo para desconectar"; return; }
+    localStorage.removeItem(CFG_K);
+    try { firebase.auth().signOut().finally(() => location.reload()); } catch(e){ location.reload(); }
+  }
+  else if("restaurar" in d) $("#arq-backup").click();
+  else if(d.filtro){ S.filtroServ = d.filtro; render(); }
+  else if(d.dia){ S.presData = somaDia(S.presData, Number(d.dia)); ouvirPresenca(); render(); }
+  else if(d.marca){
+    if(S.marcas[d.id] === d.marca) delete S.marcas[d.id]; else S.marcas[d.id] = d.marca;
+    S.presSujo = true; render(); gravarPresenca();
+  }
+});
+document.addEventListener("input", ev => {
+  if(ev.target.id === "busca"){ S.busca = ev.target.value; $("#lista").innerHTML = listaEquipe(); }
+});
+document.addEventListener("change", ev => {
+  if(ev.target.id === "arq-backup" && ev.target.files[0]){
+    ev.target.files[0].text().then(t => {
+      const o = JSON.parse(t);
+      if(!o || typeof o !== "object" || Array.isArray(o)) throw 0;
+      backupPendente = o;
+      abrir(`<form id="form-restaurar"><h2>Restaurar este backup?</h2>
+        <p style="margin:0">${S.modo === "nuvem" ? "Os registros do arquivo serão gravados na nuvem, por cima dos que tiverem o mesmo código." : "Todos os dados atuais serão substituídos pelos do arquivo."}</p>
+        <p class="err" id="erro" hidden></p>
+        <div class="foot"><button type="button" class="btn" data-fechar>Cancelar</button><button class="btn primary" id="salvar">Restaurar</button></div></form>`);
+    }).catch(() => aviso("Este arquivo não é um backup válido."));
+    return;
+  }
+  if(ev.target.name === "dur") ev.target.closest("form").dataset.dur = ev.target.value;
+  if(ev.target.id === "pres-data" && ev.target.value){ S.presData = ev.target.value; ouvirPresenca(); render(); }
+});
+$("#dlg").addEventListener("close", () => { $("#dlg").innerHTML = ""; });
+
+if(NO_APP){ try { new EventSource("/api/vivo"); } catch(e){} }
+iniciar();
+</script>
+</body>
+</html>

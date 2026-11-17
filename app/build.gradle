@@ -1,0 +1,48 @@
+plugins {
+    id 'com.android.application'
+}
+
+def numero = Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER") ?: "1")
+
+android {
+    namespace 'br.com.germanysolar.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'br.com.germanysolar.app'
+        minSdk 24
+        targetSdk 34
+        versionCode numero
+        versionName "1.0.${numero}"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('../keystore/germany-solar.jks')
+            storePassword 'germanysolar2026'
+            keyAlias 'germanysolar'
+            keyPassword 'germanysolar2026'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+}
