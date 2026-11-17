@@ -177,7 +177,7 @@ func main() {
 				http.Error(w, "origem", http.StatusForbidden)
 				return
 			}
-			b, err := io.ReadAll(io.LimitReader(r.Body, 32<<20))
+			b, err := io.ReadAll(io.LimitReader(r.Body, 512<<20))
 			var obj map[string]any
 			if err != nil || json.Unmarshal(b, &obj) != nil {
 				http.Error(w, "json", http.StatusBadRequest)

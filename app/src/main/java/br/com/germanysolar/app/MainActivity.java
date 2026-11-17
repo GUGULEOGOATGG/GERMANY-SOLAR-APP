@@ -2,9 +2,13 @@ package br.com.germanysolar.app;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -15,6 +19,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import androidx.core.content.FileProvider;
 import androidx.webkit.WebViewAssetLoader;
 
 import java.io.File;
@@ -39,6 +44,8 @@ public class MainActivity extends Activity {
     private WebView web;
     private ValueCallback<Uri[]> escolhaPendente;
     private String textoPendente;
+    private File fotoArquivo;
+    private Uri fotoUri;
     private final Object travaDados = new Object();
 
     @Override
@@ -85,9 +92,40 @@ public class MainActivity extends Activity {
             public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, FileChooserParams p) {
                 if (escolhaPendente != null) escolhaPendente.onReceiveValue(null);
                 escolhaPendente = cb;
-                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                i.addCategory(Intent.CATEGORY_OPENABLE);
-                i.setType("*/*");
+                boolean imagem = false;
+                for (String a : p.getAcceptTypes()) if (a != null && a.startsWith("image")) imagem = true;
+                Intent i;
+                fotoArquivo = null;
+                fotoUri = null;
+                if (imagem) {
+                    // Foto do recibo: câmera ou galeria
+                    Intent galeria = new Intent(Intent.ACTION_GET_CONTENT);
+                    galeria.addCategory(Intent.CATEGORY_OPENABLE);
+                    galeria.setType("image/*");
+                    i = Intent.createChooser(galeria, "Foto do recibo");
+                    try {
+                        File pasta = new File(getCacheDir(), "fotos");
+                        pasta.mkdirs();
+                        fotoArquivo = new File(pasta, "recibo-" + System.currentTimeMillis() + ".jpg");
+                        fotoUri = FileProvider.getUriForFile(MainActivity.this, getPackageName() + ".arquivos", fotoArquivo);
+                        Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        camera.putExtra(MediaStore.EXTRA_OUTPUT, fotoUri);
+                        camera.setClipData(ClipData.newRawUri("", fotoUri));
+                        int flags = Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION;
+                        camera.addFlags(flags);
+                        for (ResolveInfo r : getPackageManager().queryIntentActivities(camera, PackageManager.MATCH_DEFAULT_ONLY)) {
+                            grantUriPermission(r.activityInfo.packageName, fotoUri, flags);
+                        }
+                        i.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{camera});
+                    } catch (Exception e) {
+                        fotoArquivo = null;
+                        fotoUri = null;
+                    }
+                } else {
+                    i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    i.addCategory(Intent.CATEGORY_OPENABLE);
+                    i.setType("*/*");
+                }
                 try {
                     startActivityForResult(i, ABRIR_ARQUIVO);
                     return true;
@@ -129,6 +167,11 @@ public class MainActivity extends Activity {
         Uri uri = (resultado == RESULT_OK && dados != null) ? dados.getData() : null;
 
         if (pedido == ABRIR_ARQUIVO) {
+            if (uri == null && resultado == RESULT_OK && fotoArquivo != null && fotoArquivo.length() > 0) {
+                uri = fotoUri;
+            }
+            fotoArquivo = null;
+            fotoUri = null;
             if (escolhaPendente != null) {
                 escolhaPendente.onReceiveValue(uri != null ? new Uri[]{uri} : null);
                 escolhaPendente = null;

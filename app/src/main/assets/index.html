@@ -76,6 +76,19 @@ textarea{min-height:80px;resize:vertical}
 .search{max-width:280px}
 
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tiles.quatro{grid-template-columns:repeat(4,1fr)}
+.tile.din b{font-size:26px;line-height:1.15}
+.pos{color:var(--ok)} .neg{color:var(--bad)}
+.din,.valor{font-variant-numeric:tabular-nums;white-space:nowrap}
+.valor{font:700 22px/1.1 var(--display)}
+.resumo{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;padding:8px 10px;background:var(--bg);border-radius:8px}
+.resumo b{font-variant-numeric:tabular-nums}
+.foto-prev{max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--line);display:block}
+.foto-grande{width:100%;height:auto;border-radius:8px;border:1px solid var(--line)}
+.oque .obs{font-style:italic}
+.oque .receb{color:var(--ok);font-weight:600;font-style:normal}
+form[data-tipo="entrada"] .so-saida,form[data-tipo="saida"] .so-entrada{display:none}
+form:not([data-outro="1"]) .so-outro{display:none}
 .tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .tile b{display:block;font:700 44px/1 var(--display);font-variant-numeric:tabular-nums}
 .tile span{color:var(--muted);font-size:14px}
@@ -149,10 +162,12 @@ label small{font-weight:400;color:var(--muted)}
 @media (max-width:640px){
   .bar{padding:12px 16px}
   nav{position:fixed;left:0;right:0;bottom:0;margin:0;background:var(--brand);border-top:3px solid var(--accent);justify-content:space-around;padding:6px 8px;z-index:4}
-  nav a{font-size:17px;padding:12px 8px;flex:1;text-align:center;border-bottom:0;border-top:3px solid transparent}
+  nav a{font-size:15px;padding:12px 2px;flex:1;text-align:center;border-bottom:0;border-top:3px solid transparent}
   nav a[aria-current="page"]{border-top-color:var(--sun);border-radius:0}
   .head h1{font-size:28px}
   .tile b{font-size:36px}.tile{padding:12px}
+  .tiles.quatro{grid-template-columns:repeat(2,1fr)}
+  .tile.din b{font-size:22px}
   .grid2,.checks,.dur{grid-template-columns:1fr}
   .etapas li{grid-template-columns:auto 46px 1fr}
   .etapas li .link{grid-column:3}
@@ -174,6 +189,7 @@ label small{font-weight:400;color:var(--muted)}
       <a href="#equipe">Equipe</a>
       <a href="#servicos">Serviços</a>
       <a href="#presenca">Presença</a>
+      <a href="#financas">Finanças</a>
     </nav>
   </div>
 </header>
@@ -187,6 +203,12 @@ const ST_FUNC = {ativo:["Ativo","ok"],ferias:["Férias","info"],afastado:["Afast
 const TIPOS = ["Instalação solar","Manutenção solar","Limpeza de módulos","Elétrica residencial","Elétrica predial","Elétrica industrial","Vistoria técnica"];
 const ST_SERV = {agendado:["Agendado","info"],andamento:["Em andamento","warn"],concluido:["Concluído","ok"]};
 const PRES = {presente:"Presente",falta:"Falta",folga:"Folga"};
+const FORMAS = ["Pix","Dinheiro","Cartão de crédito","Cartão de débito","Transferência","Boleto","Cheque"];
+const CAT_ENT = ["Pagamento do cliente","Sinal / entrada","Outro recebimento"];
+const CAT_SAI = ["Pagamento de funcionário","Material e equipamentos","Combustível e transporte","Ferramentas","Alimentação","Impostos e taxas","Outra despesa"];
+const PAG = {dia:"Por dia",semana:"Por semana",mes:"Mensal",servico:"Por serviço"};
+const PAG_SUF = {dia:"por dia",semana:"por semana",mes:"por mês",servico:"por serviço"};
+const MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -194,6 +216,12 @@ const iso = d => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") 
 const hoje = () => iso(new Date());
 const br = s => s ? s.split("-").reverse().join("/") : "";
 const dias = s => Math.round((new Date(s+"T00:00") - new Date(hoje()+"T00:00")) / 864e5);
+const brl = n => (Number(n) || 0).toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
+const num = t => { let x = String(t ?? "").replace(/[R$\s]/g, ""); if(x.includes(",")) x = x.replace(/\./g, "").replace(",", "."); const n = parseFloat(x); return isFinite(n) ? Math.round(n * 100) / 100 : 0; };
+const valIn = n => num(n) ? num(n).toFixed(2).replace(".", ",") : "";
+const r2 = n => Math.round(n * 100) / 100;
+const nomeMes = m => { const [a,b] = m.split("-"); return MESES[Number(b) - 1] + " de " + a; };
+const somaMes = (m,n) => { const d = new Date(m + "-15T12:00"); d.setMonth(d.getMonth() + n); return iso(d).slice(0,7); };
 const somaDia = (s,n) => { const d = new Date(s+"T12:00"); d.setDate(d.getDate()+n); return iso(d); };
 
 const S = {
@@ -201,6 +229,7 @@ const S = {
   func:[], serv:[], okFunc:false, okServ:false,
   busca:"", filtroServ:"abertos",
   abertos:new Set(),
+  lanc:[], okLanc:false, mes:hoje().slice(0,7), presMes:{}, fotoForm:undefined,
   modo:"local", cfg:null, user:null, login:false, unsubs:[],
   presData:hoje(), marcas:{}, presSujo:false, presGravando:false, presUnsub:null
 };
@@ -208,7 +237,7 @@ const S = {
 /* ---------- banco de dados local ---------- */
 const NO_APP = location.protocol.startsWith("http") && location.hostname === "127.0.0.1";
 const ANDROID = !!(window.AndroidApp && window.AndroidApp.lerDados);
-const COLS = ["funcionarios","servicos","presenca"];
+const COLS = ["funcionarios","servicos","presenca","lancamentos","fotos"];
 const CFG_K = "equipe-nuvem-config";
 
 /* Banco local: arquivo ao lado do programa (app de PC) ou armazenamento do navegador. */
@@ -241,6 +270,7 @@ async function bancoLocal(){
     async set(d){ (dados[c] = dados[c] || {})[id] = d; await grava(); },
     async update(d){ if(!dados[c] || !dados[c][id]) throw {code:"invalid_argument"}; dados[c][id] = {...dados[c][id], ...d}; await grava(); },
     async delete(){ if(dados[c]) delete dados[c][id]; await grava(); },
+    async get(){ return snap(c,id); },
     onSnapshot(next){ return ouvir(() => next(snap(c,id))); }});
   return {
     doc:p => { const [c,id] = p.split("/"); return docRef(c,id); },
@@ -276,6 +306,7 @@ function bancoNuvem(){
   };
   const docRef = r => ({id:r.id, path:r.path,
     set:d => prazo(r.set(limpo(d))), update:d => prazo(r.update(limpo(d))), delete:() => prazo(r.delete()),
+    get:() => r.get().then(x => ({id:x.id, exists:x.exists, data:() => x.data()})),
     onSnapshot:(n,e) => r.onSnapshot(n,e)});
   return {
     doc:p => docRef(fs.doc(p)),
@@ -353,7 +384,7 @@ async function iniciar(){
 function pararOuvintes(){
   S.unsubs.forEach(f => f()); S.unsubs = [];
   if(S.presUnsub){ S.presUnsub(); S.presUnsub = null; }
-  S.db = null; S.func = []; S.serv = []; S.okFunc = S.okServ = false; S.marcas = {}; S.conn = "conectando";
+  S.db = null; S.func = []; S.serv = []; S.lanc = []; S.presMes = {}; S.okFunc = S.okServ = S.okLanc = false; S.marcas = {}; S.conn = "conectando";
 }
 function ouvir(){
   const db = S.db;
@@ -367,6 +398,10 @@ function ouvir(){
   S.unsubs.push(db.collection("servicos").onSnapshot(snap => {
     S.serv = snap.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b) => String(a.data).localeCompare(String(b.data)));
     S.okServ = true; pronto(snap); render();
+  }, falha));
+  S.unsubs.push(db.collection("lancamentos").onSnapshot(snap => {
+    S.lanc = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    S.okLanc = true; pronto(snap); render();
   }, falha));
   ouvirPresenca();
   render();
@@ -390,6 +425,7 @@ async function gravarPresenca(){
     while(S.presSujo){
       S.presSujo = false;
       await S.db.doc("presenca/" + S.presData).set({marcas:{...S.marcas}});
+      delete S.presMes[S.presData.slice(0,7)];
     }
   } catch(e){ aviso(msgErro(e)); }
   S.presGravando = false;
@@ -408,7 +444,7 @@ let tAviso;
 function aviso(t){ $("#toast").textContent = t; clearTimeout(tAviso); tAviso = setTimeout(() => $("#toast").textContent = "", 4000); }
 
 /* ---------- telas ---------- */
-const rota = () => ["inicio","equipe","servicos","presenca"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "inicio";
+const rota = () => ["inicio","equipe","servicos","presenca","financas"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "inicio";
 const nomeDe = id => { const f = S.func.find(x => x.id === id); return f ? f.nome : "Removido"; };
 const pill = (map,k) => { const v = map[k] || ["—","off"]; return `<span class="pill ${v[1]}">${esc(v[0])}</span>`; };
 const edita = () => S.db && S.podeEscrever;
@@ -461,7 +497,7 @@ function blocoEtapas(s){
     <ol>${vis.map(e => `<li class="${e.feito ? "feito" : ""}">
       <button type="button" class="check" data-feito="${esc(e.id)}" data-sid="${esc(s.id)}" aria-pressed="${!!e.feito}" aria-label="${e.feito ? "Desmarcar etapa concluída" : "Marcar etapa como concluída"}" ${edita() ? "" : "disabled"}>✓</button>
       <span class="quando">${e.data === h ? "Hoje" : esc(br(e.data).slice(0,5))}</span>
-      <span class="oque">${esc(e.texto)}${(e.equipe || []).length ? `<small>${esc(e.equipe.map(nomeDe).join(", "))}</small>` : ""}</span>
+      <span class="oque">${esc(e.texto)}${(e.equipe || []).length ? `<small>${esc(e.equipe.map(nomeDe).join(", "))}</small>` : ""}${e.obs ? `<small class="obs">${esc(e.obs)}</small>` : ""}${num(e.recebido) > 0 ? `<small class="receb">Recebido ${brl(e.recebido)}${e.forma ? " · " + esc(e.forma) : ""}</small>` : ""}</span>
       ${edita() ? `<button type="button" class="link" data-etapa="${esc(e.id)}" data-sid="${esc(s.id)}">Editar</button>` : ""}
     </li>`).join("")}</ol></div>`;
 }
@@ -477,6 +513,14 @@ function cardServico(s){
     if(s.status === "andamento") ac += `<button class="btn small ${L ? "" : "go"}" data-avancar="${id}" data-para="concluido">Concluir serviço</button>`;
     ac += `<button class="btn small" data-serv="${id}">Editar</button>`;
   }
+  if(S.db) ac += `<button class="btn small" data-finserv="${id}">Financeiro e recibos</button>`;
+  const fin = finServico(s);
+  const resumo = fin.valor > 0 || fin.ls.length ? `<div class="resumo">
+      ${fin.valor > 0 ? `<span>Valor <b>${brl(fin.valor)}</b></span>` : ""}
+      <span>Recebido <b class="pos">${brl(fin.rec)}</b></span>
+      ${fin.valor > 0 ? `<span>Falta receber <b class="${fin.falta > 0 ? "neg" : "pos"}">${brl(fin.falta)}</b></span>` : ""}
+      ${fin.gas > 0 ? `<span>Gastos <b>${brl(fin.gas)}</b></span>` : ""}
+    </div>` : "";
   return `<article class="row">
     <div>
       <h3>${esc(s.cliente)}</h3>
@@ -485,9 +529,194 @@ function cardServico(s){
     </div>
     <div class="side">${pill(ST_SERV, s.status)}</div>
     <div class="chips">${eq}</div>
+    ${resumo}
     ${L ? blocoEtapas(s) : ""}
     ${ac ? `<div class="actions">${ac}</div>` : ""}
   </article>`;
+}
+
+/* ---------- finanças ---------- */
+function recebEtapas(){
+  const out = [];
+  for(const s of S.serv) for(const e of s.etapas || []) if(num(e.recebido) > 0)
+    out.push({id:"etapa-" + e.id, etapa:true, eid:e.id, tipo:"entrada", data:e.data, valor:num(e.recebido), forma:e.forma || "",
+      categoria:"Recebido na etapa", descricao:e.texto, servicoId:s.id});
+  return out;
+}
+const todosLanc = () => S.lanc.concat(recebEtapas());
+const soma = (arr) => r2(arr.reduce((a,l) => a + num(l.valor), 0));
+function finServico(s){
+  const ls = todosLanc().filter(l => l.servicoId === s.id).sort((a,b) => String(b.data).localeCompare(String(a.data)));
+  const rec = soma(ls.filter(l => l.tipo === "entrada")), gas = soma(ls.filter(l => l.tipo === "saida"));
+  const valor = num(s.valor);
+  return {ls, rec, gas, valor, falta:Math.max(0, r2(valor - rec))};
+}
+const participou = (s,fid) => (s.equipe || []).includes(fid) || (s.etapas || []).some(e => (e.equipe || []).includes(fid));
+function semanaDe(d){ const x = new Date(d + "T12:00"); x.setDate(x.getDate() - (x.getDay() + 6) % 7); return iso(x); }
+function carregarPresMes(m){
+  if(S.presMes[m] || !S.db) return;
+  S.presMes[m] = {carregando:true};
+  const [a,b] = m.split("-").map(Number), n = new Date(a, b, 0).getDate();
+  const dias = Array.from({length:n}, (_,i) => m + "-" + String(i + 1).padStart(2, "0"));
+  Promise.all(dias.map(d => S.db.doc("presenca/" + d).get().then(x => [d, x.exists ? ((x.data() || {}).marcas || {}) : null]).catch(() => [d, null])))
+    .then(r => { const o = {}; r.forEach(([d,mk]) => { if(mk) o[d] = mk; }); S.presMes[m] = {dias:o}; if(rota() === "financas") render(); });
+}
+function folha(m){
+  const pres = (S.presMes[m] || {}).dias || {};
+  return S.func.filter(f => f.pagTipo && num(f.pagValor) > 0).map(f => {
+    const dias = new Set();
+    for(const [d,mk] of Object.entries(pres)) if(mk[f.id] === "presente") dias.add(d);
+    for(const s of S.serv){
+      if(longo(s)){ for(const e of s.etapas || []) if(String(e.data).startsWith(m) && e.feito && (e.equipe || []).includes(f.id)) dias.add(e.data); }
+      else if(String(s.data).startsWith(m) && s.status === "concluido" && (s.equipe || []).includes(f.id)) dias.add(s.data);
+    }
+    const v = num(f.pagValor), pl = (n,a,b) => n + " " + (n === 1 ? a : b);
+    let qtd = 0, base = "";
+    if(f.pagTipo === "dia"){ qtd = dias.size; base = `${pl(qtd,"dia trabalhado","dias trabalhados")} × ${brl(v)}`; }
+    else if(f.pagTipo === "semana"){ qtd = new Set([...dias].map(semanaDe)).size; base = `${pl(qtd,"semana com trabalho","semanas com trabalho")} × ${brl(v)}`; }
+    else if(f.pagTipo === "mes"){ qtd = f.status !== "desligado" || dias.size ? 1 : 0; base = qtd ? `Salário mensal de ${brl(v)}` : "Desligado, sem dias trabalhados no mês"; }
+    else {
+      qtd = S.serv.filter(s => s.status === "concluido" && String(s.concluidoEm || s.dataFim || s.data).startsWith(m) && participou(s, f.id)).length;
+      base = `${pl(qtd,"serviço concluído","serviços concluídos")} × ${brl(v)}`;
+    }
+    const devido = r2(qtd * v);
+    const pago = soma(S.lanc.filter(l => l.tipo === "saida" && l.funcionarioId === f.id && String(l.data).startsWith(m)));
+    return {f, base, devido, pago, falta:r2(devido - pago)};
+  }).filter(x => x.devido > 0 || x.pago > 0);
+}
+function linhaLanc(l, sid){
+  const ent = l.tipo === "entrada";
+  const sv = l.servicoId && !sid ? S.serv.find(x => x.id === l.servicoId) : null;
+  const extra = [br(l.data), l.forma, sv ? sv.cliente : "", l.funcionarioId ? nomeDe(l.funcionarioId) : ""].filter(Boolean).map(esc).join(" · ");
+  const btn = !edita() ? "" : l.etapa ? `<button type="button" class="btn small" data-etapa="${esc(l.eid)}" data-sid="${esc(l.servicoId)}">Editar etapa</button>`
+    : `<button type="button" class="btn small" data-lanc="${esc(l.id)}" ${sid ? `data-voltar="${esc(sid)}"` : ""}>Editar</button>`;
+  return `<div class="row">
+    <div><h3 style="font-size:19px">${esc(l.descricao || l.categoria || (ent ? "Recebimento" : "Despesa"))}</h3>
+      <div class="meta"><span>${esc(l.categoria || "")}</span><span>${extra}</span></div></div>
+    <div class="side"><span class="valor ${ent ? "pos" : "neg"}">${ent ? "+" : "−"} ${brl(l.valor)}</span></div>
+    <div class="actions">${l.temFoto ? `<button type="button" class="btn small" data-foto="${esc(l.id)}" ${sid ? `data-voltar="${esc(sid)}"` : ""}>Ver recibo</button>` : ""}${btn}</div>
+  </div>`;
+}
+function telaFinancas(){
+  const m = S.mes;
+  carregarPresMes(m);
+  let h = `<div class="head"><div><h1>Finanças</h1><p>${esc(nomeMes(m))}</p></div>
+    <div class="tools daynav">
+      <button class="btn" data-mes="-1" aria-label="Mês anterior">‹</button>
+      <input type="month" id="fin-mes" value="${esc(m)}" aria-label="Mês">
+      <button class="btn" data-mes="1" aria-label="Próximo mês">›</button>
+      ${edita() ? `<button class="btn primary" data-novo-lanc="entrada">Novo lançamento</button>` : ""}
+    </div></div>`;
+  if(!S.okFunc || !S.okServ || !S.okLanc) return h + carregando(false);
+  const ls = todosLanc().filter(l => String(l.data).startsWith(m)).sort((a,b) => String(b.data).localeCompare(String(a.data)));
+  const ent = soma(ls.filter(l => l.tipo === "entrada")), sai = soma(ls.filter(l => l.tipo === "saida"));
+  const ar = S.serv.map(s => ({s, ...finServico(s)})).filter(x => x.valor > 0 && x.falta > 0).sort((a,b) => String(a.s.data).localeCompare(String(b.s.data)));
+  const fol = folha(m), faltaFolha = r2(fol.reduce((a,x) => a + Math.max(0, x.falta), 0));
+  const semPag = S.func.filter(f => f.status !== "desligado" && !(f.pagTipo && num(f.pagValor) > 0)).length;
+  const presCarregando = (S.presMes[m] || {}).carregando;
+  h += `<div class="tiles quatro">
+    <div class="tile din"><b class="pos">${brl(ent)}</b><span>entrou no mês</span></div>
+    <div class="tile din"><b class="neg">${brl(sai)}</b><span>saiu no mês</span></div>
+    <div class="tile din"><b class="${ent - sai < 0 ? "neg" : ""}">${brl(r2(ent - sai))}</b><span>saldo do mês</span></div>
+    <div class="tile din"><b>${brl(soma(ar.map(x => ({valor:x.falta}))))}</b><span>a receber de clientes</span></div>
+  </div>`;
+  h += `<section><h2>Pagamento da equipe</h2><div class="list">
+    ${semPag ? `<div class="notice">${semPag} funcionário${semPag === 1 ? " está" : "s estão"} sem forma de pagamento. Defina em Equipe, no botão Editar.</div>` : ""}
+    ${presCarregando ? `<div class="meta">Somando as presenças do mês…</div>` : ""}
+    ${fol.length ? `<div class="meta">Falta pagar à equipe neste mês: <b class="${faltaFolha > 0 ? "neg" : "pos"}">${brl(faltaFolha)}</b>. Dias contados pela presença marcada e pelas etapas e serviços concluídos.</div>` : ""}
+    ${fol.map(x => `<div class="row">
+      <div><h3>${esc(x.f.nome)}</h3><div class="meta"><span>${esc(PAG[x.f.pagTipo])}</span><span>${esc(x.base)}</span></div></div>
+      <div class="side"><span class="valor">${brl(x.devido)}</span></div>
+      <div class="resumo"><span>Pago <b class="pos">${brl(x.pago)}</b></span><span>${x.falta >= 0 ? "Falta pagar" : "Pago a mais"} <b class="${x.falta > 0 ? "neg" : "pos"}">${brl(Math.abs(x.falta))}</b></span></div>
+      ${edita() && x.falta > 0 ? `<div class="actions"><button class="btn small go" data-pagar="${esc(x.f.id)}" data-valor="${x.falta}">Registrar pagamento</button></div>` : ""}
+    </div>`).join("") || (semPag && !presCarregando ? "" : `<div class="empty">Nenhum valor a pagar calculado para este mês.</div>`)}
+  </div></section>`;
+  h += `<section><h2>A receber dos clientes</h2><div class="list">${ar.map(x => `<div class="row">
+      <div><h3>${esc(x.s.cliente)}</h3><div class="meta"><span>${esc(x.s.tipo)}</span><span>${esc(br(x.s.data))}</span></div></div>
+      <div class="side"><span class="valor neg">${brl(x.falta)}</span></div>
+      <div class="resumo"><span>Valor <b>${brl(x.valor)}</b></span><span>Recebido <b class="pos">${brl(x.rec)}</b></span></div>
+      <div class="actions"><button class="btn small" data-finserv="${esc(x.s.id)}">Financeiro e recibos</button></div>
+    </div>`).join("") || `<div class="empty">Nenhum serviço com valor em aberto. Informe o valor do serviço no cadastro para acompanhar aqui.</div>`}</div></section>`;
+  h += `<section><h2>Lançamentos do mês</h2><div class="list">${ls.map(l => linhaLanc(l)).join("") ||
+    `<div class="empty">Nenhum recebimento ou despesa em ${esc(nomeMes(m))}.${edita() ? `<button class="btn primary" data-novo-lanc="entrada">Novo lançamento</button>` : ""}</div>`}</div></section>`;
+  return h;
+}
+function formFinServ(sid){
+  const s = S.serv.find(x => x.id === sid); if(!s) return;
+  const x = finServico(s);
+  abrir(`<form id="form-finserv">
+    <h2>Financeiro do serviço</h2>
+    <p class="meta" style="margin:0">${esc(s.cliente)} · ${esc(s.tipo)}</p>
+    <div class="tiles quatro">
+      <div class="tile din"><b>${brl(x.valor)}</b><span>valor combinado</span></div>
+      <div class="tile din"><b class="pos">${brl(x.rec)}</b><span>recebido</span></div>
+      <div class="tile din"><b class="${x.falta > 0 ? "neg" : ""}">${brl(x.falta)}</b><span>falta receber</span></div>
+      <div class="tile din"><b>${brl(x.gas)}</b><span>gastos</span></div>
+    </div>
+    ${x.valor > 0 || x.gas > 0 ? `<p class="meta" style="margin:0">Resultado até agora (recebido menos gastos): <b class="${x.rec - x.gas < 0 ? "neg" : "pos"}">${brl(r2(x.rec - x.gas))}</b></p>` : ""}
+    <div class="list">${x.ls.map(l => linhaLanc(l, sid)).join("") || `<div class="empty">Nenhum recebimento, despesa ou recibo neste serviço.</div>`}</div>
+    <div class="foot">
+      <button type="button" class="btn" data-fechar>Fechar</button>
+      ${edita() ? `<button type="button" class="btn" data-novo-lanc="saida" data-sid="${esc(sid)}">Adicionar despesa</button>
+      <button type="button" class="btn primary" data-novo-lanc="entrada" data-sid="${esc(sid)}">Adicionar recebimento ou recibo</button>` : ""}
+    </div></form>`);
+}
+function formLanc(id, p){
+  p = p || {};
+  const l = S.lanc.find(x => x.id === id) || {tipo:p.tipo || "entrada", data:hoje(), valor:p.valor || "", forma:"Pix",
+    categoria:p.cat || "", descricao:p.descricao || "", servicoId:p.sid || "", funcionarioId:p.fid || ""};
+  S.fotoForm = undefined;
+  const tipo = l.tipo === "saida" ? "saida" : "entrada";
+  const catE = tipo === "entrada" && l.categoria ? l.categoria : CAT_ENT[0];
+  const catS = tipo === "saida" && l.categoria ? l.categoria : (l.funcionarioId ? CAT_SAI[0] : CAT_SAI[1]);
+  const servs = S.serv.slice().sort((a,b) => String(b.data).localeCompare(String(a.data)));
+  abrir(`<form id="form-lanc" data-id="${esc(id || "")}" data-tipo="${tipo}" data-voltar="${esc(p.voltar || "")}">
+    <h2>${id ? "Editar lançamento" : "Novo lançamento"}</h2>
+    <div class="dur" role="radiogroup" aria-label="Tipo de lançamento">
+      <label><input type="radio" name="ltipo" id="l-tipo-e" value="entrada" ${tipo === "entrada" ? "checked" : ""}><span><b>Recebimento</b><small>Dinheiro que entrou</small></span></label>
+      <label><input type="radio" name="ltipo" id="l-tipo-s" value="saida" ${tipo === "saida" ? "checked" : ""}><span><b>Despesa ou pagamento</b><small>Dinheiro que saiu</small></span></label>
+    </div>
+    <div class="grid2">
+      <label>Valor (R$)<input type="text" inputmode="decimal" id="l-valor" required placeholder="0,00" value="${esc(valIn(l.valor))}"></label>
+      <label>Data<input type="date" id="l-data" required value="${esc(l.data)}"></label>
+      <label class="so-entrada">Categoria<select id="l-cat-e">${opts(CAT_ENT.includes(catE) ? CAT_ENT : [catE, ...CAT_ENT], catE)}</select></label>
+      <label class="so-saida">Categoria<select id="l-cat-s">${opts(CAT_SAI.includes(catS) ? CAT_SAI : [catS, ...CAT_SAI], catS)}</select></label>
+      <label>Forma<select id="l-forma">${opts(FORMAS.includes(l.forma) || !l.forma ? FORMAS : [l.forma, ...FORMAS], l.forma || "Pix")}</select></label>
+      <label>Serviço <small>opcional</small><select id="l-serv"><option value="">Nenhum</option>${servs.map(s =>
+        `<option value="${esc(s.id)}" ${s.id === l.servicoId ? "selected" : ""}>${esc(s.cliente)} · ${esc(br(s.data))}</option>`).join("")}</select></label>
+      <label class="so-saida">Funcionário <small>se for pagamento ou adiantamento</small><select id="l-func"><option value="">Nenhum</option>${S.func.filter(f => f.status !== "desligado" || f.id === l.funcionarioId).map(f =>
+        `<option value="${esc(f.id)}" ${f.id === l.funcionarioId ? "selected" : ""}>${esc(f.nome)}</option>`).join("")}</select></label>
+    </div>
+    <label>Descrição<input type="text" id="l-desc" maxlength="160" placeholder="Ex.: 2ª parcela, compra de cabos, diária de sábado" value="${esc(l.descricao)}"></label>
+    <div><label>Foto do recibo <small>opcional</small></label>
+      <div id="l-foto-area" style="display:grid;gap:8px;margin-top:6px">${l.temFoto ? `<span class="meta">Recibo anexado.</span><div class="actions"><button type="button" class="btn small" data-foto="${esc(id)}" data-so-ver>Ver recibo</button><button type="button" class="btn small danger" data-tirar-foto>Remover foto</button></div>` : ""}</div>
+      <input type="file" id="l-foto" accept="image/*" style="margin-top:8px"></div>
+    <p class="err" id="erro" hidden></p>
+    <div class="foot">
+      ${id ? `<button type="button" class="btn danger" data-excluir-lanc="${esc(id)}">Excluir</button>` : ""}
+      <button type="button" class="btn" ${p.voltar ? `data-finserv="${esc(p.voltar)}"` : "data-fechar"}>Cancelar</button>
+      <button class="btn primary" id="salvar">Salvar</button>
+    </div></form>`);
+}
+async function comprimirFoto(arq){
+  const url = URL.createObjectURL(arq);
+  try {
+    const img = await new Promise((ok, er) => { const i = new Image(); i.onload = () => ok(i); i.onerror = er; i.src = url; });
+    const k = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.6);
+  } finally { URL.revokeObjectURL(url); }
+}
+function verFoto(id, voltar, soVer){
+  S.db.doc("fotos/" + id).get().then(x => {
+    const img = x.exists && (x.data() || {}).img;
+    if(!img){ aviso("Não encontrei a foto deste recibo."); return; }
+    if(soVer){ const a = $("#l-foto-area"); if(a) a.insertAdjacentHTML("beforeend", `<img class="foto-prev" alt="Foto do recibo" src="${esc(img)}">`); return; }
+    abrir(`<form id="form-foto"><h2>Recibo</h2><img class="foto-grande" alt="Foto do recibo" src="${esc(img)}">
+      <div class="foot"><button type="button" class="btn" ${voltar ? `data-finserv="${esc(voltar)}"` : "data-fechar"}>${voltar ? "Voltar" : "Fechar"}</button></div></form>`);
+  }).catch(e => aviso(msgErro(e)));
 }
 
 function telaInicio(){
@@ -534,7 +763,7 @@ function listaEquipe(){
       ${f.obs ? `<div class="meta">${esc(f.obs)}</div>` : ""}
     </div>
     <div class="side">${pill(ST_FUNC, f.status)}${edita() ? `<button class="btn small" data-func="${esc(f.id)}">Editar</button>` : ""}</div>
-    <div class="chips">${nrBadges(f)}</div>
+    <div class="chips">${f.pagTipo && num(f.pagValor) > 0 ? `<span class="chip">${brl(f.pagValor)} ${PAG_SUF[f.pagTipo] || ""}</span>` : ""}${nrBadges(f)}</div>
   </article>`).join("");
 }
 function telaEquipe(){
@@ -587,7 +816,7 @@ function render(){
   const foco = document.activeElement && document.activeElement.id === "busca";
   if(S.conn === "semnet"){ $("#app").innerHTML = telaSemNet(); return; }
   if(S.login){ if(!$("#form-login")) $("#app").innerHTML = telaLogin(); return; }
-  $("#app").innerHTML = bannerConn() + ({inicio:() => telaInicio() + blocoBackup(),equipe:telaEquipe,servicos:telaServicos,presenca:telaPresenca}[r])();
+  $("#app").innerHTML = bannerConn() + ({inicio:() => telaInicio() + blocoBackup(),equipe:telaEquipe,servicos:telaServicos,presenca:telaPresenca,financas:telaFinancas}[r])();
   if(foco && $("#busca")){ const b = $("#busca"); b.focus(); b.setSelectionRange(b.value.length, b.value.length); }
 }
 
@@ -607,6 +836,8 @@ function formFunc(id){
       <label>Data de admissão<input type="date" id="f-admissao" value="${esc(f.admissao)}"></label>
       <label>Validade da NR-10 <small>segurança em eletricidade</small><input type="date" id="f-nr10" value="${esc(f.nr10)}"></label>
       <label>Validade da NR-35 <small>trabalho em altura</small><input type="date" id="f-nr35" value="${esc(f.nr35)}"></label>
+      <label>Forma de pagamento<select id="f-pagtipo"><option value="">Não definida</option>${Object.entries(PAG).map(([k,v]) => `<option value="${k}" ${f.pagTipo === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+      <label>Valor (R$) <small>por dia, semana, mês ou serviço</small><input type="text" inputmode="decimal" id="f-pagvalor" placeholder="0,00" value="${esc(valIn(f.pagValor))}"></label>
     </div>
     <label>Observações<textarea id="f-obs" maxlength="500">${esc(f.obs)}</textarea></label>
     <p class="err" id="erro" hidden></p>
@@ -620,7 +851,8 @@ function formServ(id){
   const s = S.serv.find(x => x.id === id) || {status:"agendado", tipo:TIPOS[0], data:hoje(), equipe:[], duracao:"curto"};
   const eq = s.equipe || [], L = longo(s);
   const pessoas = S.func.filter(f => f.status === "ativo" || eq.includes(f.id));
-  abrir(`<form id="form-serv" data-id="${esc(id || "")}" data-dur="${L ? "longo" : "curto"}">
+  const outro = !!s.tipo && !TIPOS.includes(s.tipo);
+  abrir(`<form id="form-serv" data-id="${esc(id || "")}" data-dur="${L ? "longo" : "curto"}" data-outro="${outro ? 1 : 0}">
     <h2>${id ? "Editar serviço" : "Novo serviço"}</h2>
     <div class="dur" role="radiogroup" aria-label="Duração do serviço">
       <label><input type="radio" name="dur" id="s-dur-curto" value="curto" ${L ? "" : "checked"}><span><b>Serviço de 1 dia</b><small>Começa e termina no mesmo dia</small></span></label>
@@ -629,11 +861,13 @@ function formServ(id){
     <label>Cliente<input type="text" id="s-cliente" required maxlength="120" value="${esc(s.cliente)}"></label>
     <label>Endereço<input type="text" id="s-endereco" maxlength="200" value="${esc(s.endereco)}"></label>
     <div class="grid2">
-      <label>Tipo de serviço<select id="s-tipo">${opts(TIPOS.includes(s.tipo) ? TIPOS : [s.tipo, ...TIPOS], s.tipo)}</select></label>
+      <label>Tipo de serviço<select id="s-tipo">${opts([...TIPOS, "Outro"], outro ? "Outro" : s.tipo)}</select></label>
+      <label class="so-outro">Qual serviço?<input type="text" id="s-tipo-outro" maxlength="80" placeholder="Ex.: instalação de câmeras" value="${esc(outro && s.tipo !== "Outro" ? s.tipo : "")}"></label>
       <label>Situação<select id="s-status">${optsMap(ST_SERV, s.status)}</select></label>
       <label><span class="so-curto">Data</span><span class="so-longo">Data de início</span><input type="date" id="s-data" required value="${esc(s.data)}"></label>
       <label class="so-longo">Previsão de término <small>opcional</small><input type="date" id="s-fim" value="${esc(s.dataFim)}"></label>
       <label>Potência do sistema <small>kWp, se for solar</small><input type="number" id="s-kwp" min="0" step="0.01" value="${esc(s.kwp)}"></label>
+      <label>Valor do serviço (R$) <small>combinado com o cliente</small><input type="text" inputmode="decimal" id="s-valor" placeholder="0,00" value="${esc(valIn(s.valor))}"></label>
     </div>
     <div><label><span class="so-curto">Equipe do serviço</span><span class="so-longo">Equipe principal</span></label>
       <div class="checks" style="margin-top:6px">${pessoas.length ? pessoas.map(f =>
@@ -658,10 +892,16 @@ function formEtapa(sid, eid){
     <p class="meta" style="margin:0">${esc(s.cliente)} · ${esc(s.tipo)}</p>
     <label>Dia<input type="date" id="e-data" required value="${esc(e.data)}"></label>
     <label>O que foi feito neste dia<textarea id="e-texto" required maxlength="400" placeholder="Ex.: fixação dos trilhos e passagem dos cabos CC">${esc(e.texto)}</textarea></label>
-    <div><label>Quem trabalhou</label>
+    <div><label>Funcionários desta etapa</label>
       <div class="checks" style="margin-top:6px">${pessoas.length ? pessoas.map(f =>
         `<label><input type="checkbox" id="ee-${esc(f.id)}" value="${esc(f.id)}" ${eq.includes(f.id) ? "checked" : ""}>${esc(f.nome)}</label>`).join("")
         : `<span class="meta">Nenhum funcionário ativo cadastrado.</span>`}</div></div>
+    <label>Observações da etapa<textarea id="e-obs" maxlength="500" placeholder="Ex.: faltou material, cliente pediu mudança no local do inversor">${esc(e.obs)}</textarea></label>
+    <div class="grid2">
+      <label>Recebeu algum valor nesta etapa? <small>deixe em branco se não recebeu</small><input type="text" inputmode="decimal" id="e-receb" placeholder="0,00" value="${esc(valIn(e.recebido))}"></label>
+      <label>Forma de recebimento<select id="e-forma">${opts(FORMAS, e.forma || "Pix")}</select></label>
+    </div>
+    <p class="meta" style="margin:0">Para guardar a foto do recibo, use o botão Financeiro e recibos no cartão do serviço.</p>
     <div class="checks" style="grid-template-columns:1fr"><label><input type="checkbox" id="e-feito" ${e.feito ? "checked" : ""}>Etapa concluída <small>desmarque se for só planejada ou ficou pendente</small></label></div>
     <p class="err" id="erro" hidden></p>
     <div class="foot">
@@ -694,24 +934,47 @@ document.addEventListener("submit", ev => {
     const id = f.dataset.id, antigo = S.func.find(x => x.id === id);
     salvar("funcionarios", id, {nome:val("f-nome"), funcao:val("f-funcao"), status:val("f-status"), telefone:val("f-telefone"),
       admissao:val("f-admissao"), nr10:val("f-nr10"), nr35:val("f-nr35"), obs:val("f-obs"),
+      pagTipo:val("f-pagtipo"), pagValor:num(val("f-pagvalor")),
       criadoEm:(antigo && antigo.criadoEm) || new Date().toISOString()});
   } else if(f.id === "form-serv"){
     const id = f.dataset.id, antigo = S.serv.find(x => x.id === id);
     const equipe = [...f.querySelectorAll(".checks input:checked")].map(i => i.value);
     const dur = f.dataset.dur === "longo" ? "longo" : "curto";
-    salvar("servicos", id, {cliente:val("s-cliente"), endereco:val("s-endereco"), tipo:val("s-tipo"), data:val("s-data"),
+    const tipo = val("s-tipo") === "Outro" ? (val("s-tipo-outro") || "Outro") : val("s-tipo");
+    const st = val("s-status");
+    salvar("servicos", id, {cliente:val("s-cliente"), endereco:val("s-endereco"), tipo, data:val("s-data"),
+      valor:num(val("s-valor")), concluidoEm:st === "concluido" ? ((antigo && antigo.concluidoEm) || hoje()) : "",
       duracao:dur, dataFim:dur === "longo" ? val("s-fim") : "", etapas:(antigo && antigo.etapas) || [],
-      status:val("s-status"), kwp:val("s-kwp"), equipe, obs:val("s-obs"),
+      status:st, kwp:val("s-kwp"), equipe, obs:val("s-obs"),
       criadoEm:(antigo && antigo.criadoEm) || new Date().toISOString()});
   } else if(f.id === "form-etapa"){
     const sv = S.serv.find(x => x.id === f.dataset.sid); if(!sv) return fechar();
     const eid = f.dataset.eid;
+    const receb = num(val("e-receb"));
     const nova = {id:eid || novoId(), data:val("e-data"), texto:val("e-texto"), feito:$("#e-feito").checked,
+      obs:val("e-obs"), recebido:receb, forma:receb > 0 ? val("e-forma") : "",
       equipe:[...f.querySelectorAll('input[id^="ee-"]:checked')].map(i => i.value)};
     const et = (sv.etapas || []).filter(x => x.id !== nova.id).concat(nova);
     $("#salvar").disabled = true;
     gravarEtapas(sv.id, et, sv.status === "agendado" ? {status:"andamento"} : null)
       .then(() => { fechar(); aviso("Etapa salva."); }).catch(erroForm);
+  } else if(f.id === "form-lanc"){
+    const id = f.dataset.id || novoId(), antigo = S.lanc.find(x => x.id === f.dataset.id);
+    const tipo = f.dataset.tipo === "saida" ? "saida" : "entrada", valor = num(val("l-valor"));
+    if(!(valor > 0)){ const p = $("#erro"); p.textContent = "Informe um valor maior que zero."; p.hidden = false; return; }
+    const foto = S.fotoForm;
+    const dados = {tipo, data:val("l-data"), valor, forma:val("l-forma"), categoria:tipo === "entrada" ? val("l-cat-e") : val("l-cat-s"),
+      descricao:val("l-desc"), servicoId:val("l-serv"), funcionarioId:tipo === "saida" ? val("l-func") : "",
+      temFoto:foto === undefined ? !!(antigo && antigo.temFoto) : !!foto, criadoEm:(antigo && antigo.criadoEm) || new Date().toISOString()};
+    $("#salvar").disabled = true;
+    (async () => {
+      if(foto) await S.db.doc("fotos/" + id).set({img:foto});
+      else if(foto === null) await S.db.doc("fotos/" + id).delete();
+      await S.db.doc("lancamentos/" + id).set(dados);
+    })().then(() => {
+      const v = f.dataset.voltar; S.fotoForm = undefined; fechar(); aviso("Lançamento salvo.");
+      if(v) setTimeout(() => formFinServ(v), 80);
+    }).catch(erroForm);
   } else if(f.id === "form-login"){
     $("#salvar").disabled = true;
     firebase.auth().signInWithEmailAndPassword(val("l-email"), $("#l-senha").value).catch(e => {
@@ -756,7 +1019,7 @@ document.addEventListener("click", ev => {
   }
   else if(d.avancar){
     t.disabled = true;
-    S.db.doc("servicos/" + d.avancar).update({status:d.para}).catch(e => { aviso(msgErro(e)); t.disabled = false; });
+    S.db.doc("servicos/" + d.avancar).update(d.para === "concluido" ? {status:d.para, concluidoEm:hoje()} : {status:d.para}).catch(e => { aviso(msgErro(e)); t.disabled = false; });
   }
   else if(d.novaEtapa) formEtapa(d.novaEtapa);
   else if(d.etapa) formEtapa(d.sid, d.etapa);
@@ -805,6 +1068,23 @@ document.addEventListener("click", ev => {
     try { firebase.auth().signOut().finally(() => location.reload()); } catch(e){ location.reload(); }
   }
   else if("restaurar" in d) $("#arq-backup").click();
+  else if(d.finserv) formFinServ(d.finserv);
+  else if(d.novoLanc) formLanc(null, {tipo:d.novoLanc, sid:d.sid, voltar:d.sid});
+  else if(d.lanc) formLanc(d.lanc, {voltar:d.voltar});
+  else if(d.pagar){
+    const f = S.func.find(x => x.id === d.pagar);
+    formLanc(null, {tipo:"saida", fid:d.pagar, cat:CAT_SAI[0], valor:Number(d.valor), descricao:"Pagamento de " + nomeMes(S.mes) + (f ? " - " + f.nome : "")});
+  }
+  else if(d.foto) verFoto(d.foto, d.voltar, "soVer" in d);
+  else if("tirarFoto" in d){ S.fotoForm = null; const a = $("#l-foto-area"); if(a) a.innerHTML = `<span class="meta">A foto será removida ao salvar.</span>`; const i = $("#l-foto"); if(i) i.value = ""; }
+  else if(d.excluirLanc){
+    if(!d.conf){ d.conf = "1"; t.textContent = "Clique de novo para excluir"; return; }
+    const id = d.excluirLanc, l = S.lanc.find(x => x.id === id), v = t.closest("form").dataset.voltar;
+    t.disabled = true;
+    (async () => { if(l && l.temFoto) await S.db.doc("fotos/" + id).delete(); await S.db.doc("lancamentos/" + id).delete(); })()
+      .then(() => { fechar(); aviso("Lançamento excluído."); if(v) setTimeout(() => formFinServ(v), 80); }).catch(erroForm);
+  }
+  else if(d.mes){ S.mes = somaMes(S.mes, Number(d.mes)); render(); }
   else if(d.filtro){ S.filtroServ = d.filtro; render(); }
   else if(d.dia){ S.presData = somaDia(S.presData, Number(d.dia)); ouvirPresenca(); render(); }
   else if(d.marca){
@@ -829,6 +1109,16 @@ document.addEventListener("change", ev => {
     return;
   }
   if(ev.target.name === "dur") ev.target.closest("form").dataset.dur = ev.target.value;
+  if(ev.target.name === "ltipo") ev.target.closest("form").dataset.tipo = ev.target.value;
+  if(ev.target.id === "s-tipo") ev.target.closest("form").dataset.outro = ev.target.value === "Outro" ? "1" : "0";
+  if(ev.target.id === "fin-mes" && ev.target.value){ S.mes = ev.target.value; render(); }
+  if(ev.target.id === "l-foto" && ev.target.files[0]){
+    const a = $("#l-foto-area"); if(a) a.innerHTML = `<span class="meta">Preparando a foto…</span>`;
+    comprimirFoto(ev.target.files[0]).then(img => {
+      S.fotoForm = img;
+      const b = $("#l-foto-area"); if(b) b.innerHTML = `<img class="foto-prev" alt="Prévia do recibo" src="${img}"><div class="actions"><button type="button" class="btn small danger" data-tirar-foto>Remover foto</button></div>`;
+    }).catch(() => { const b = $("#l-foto-area"); if(b) b.innerHTML = `<span class="meta">Não consegui abrir essa imagem. Tente outra foto.</span>`; });
+  }
   if(ev.target.id === "pres-data" && ev.target.value){ S.presData = ev.target.value; ouvirPresenca(); render(); }
 });
 $("#dlg").addEventListener("close", () => { $("#dlg").innerHTML = ""; });
